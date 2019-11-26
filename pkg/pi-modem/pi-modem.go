@@ -169,6 +169,23 @@ func setTextMode() bool {
 	return true
 }
 
-func MakeCall(call Call) (error, string) {
-	return nil, "dummy"
+func MakeCall(call Call) (string, error) {
+
+	if call.Number == "" {
+		return "", errors.New("MakeCall: Number is empty")
+	}
+
+	cmd := "ATD" + call.Number + ";" + BREAKLINE
+
+	rv, err := SendCommand(cmd)
+	if err != nil {
+		return "", errors.New("MakeCall: Failed to establish Call. Reason: " + err.Error())
+	}
+
+	// We are not done yet ... sleep and wait then read again and check for some other endword ... like VOICE END
+
+
+
+	return rv, nil
+
 }

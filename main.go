@@ -51,6 +51,14 @@ var (
 		Name: "pimetrics_sms_sent_error",
 		Help: "SMS successfully sent from number",
 	}, []string{"number"})
+	CallSuccess = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "pimetrics_call_success",
+		Help: "Call has been established",
+	}, []string{"number"})
+	CallError = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "pimetrics_call_error",
+		Help: "Call has failed",
+	}, []string{"number"})
 
 	handlerMutex = &sync.Mutex{}
 )
@@ -66,7 +74,13 @@ func registerMetrics() {
 		log.WithError(err).Error("Failed register SMSSentSuccess")
 	}
 	if err := prometheus.Register(SMSSentError); err != nil {
-		log.WithError(err).Error("Failed register isUpMetric")
+		log.WithError(err).Error("Failed register SMSSentError")
+	}
+	if err := prometheus.Register(CallSuccess); err != nil {
+		log.WithError(err).Error("Failed register CallSuccess")
+	}
+	if err := prometheus.Register(CallError); err != nil {
+		log.WithError(err).Error("Failed register CallError")
 	}
 }
 
@@ -193,6 +207,39 @@ func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, output)
 }
 
+func HandleMakeCall(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Only POST requests are valid", http.StatusBadRequest)
+		return
+	}
+
+	var call modem.Call
+
+	err := json.NewDecoder(r.Body).Decode(&call)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"number": call.Number,
+		"input":   call.Input,
+	}).Info("Making Call with the following details")
+
+	output, err := modem.MakeCall(call)
+	if err != nil {
+		log.WithError(err).Error("MakeCall failed")
+		http.Error(w, fmt.Sprintf("MakeCall failed with %v", err),
+			http.StatusInternalServerError)
+		CallError.With(prometheus.Labels{"number":call.Number}).Inc()
+		return
+	}
+
+	CallSuccess.With(prometheus.Labels{"number":call.Number}).Inc()
+
+	fmt.Fprint(w,output)
+}
+
 func main() {
 	log.Infoln(HEADER)
 
@@ -201,6 +248,7 @@ func main() {
 	http.Handle(METRICS_ENDPOINT, prom.Handler())
 	http.HandleFunc("/send_command", HandleSendCommand)
 	http.HandleFunc("/send_sms", HandleSendSMS)
+	http.HandleFunc("/make_call", HandleMakeCall)
 
 	log.WithFields(log.Fields{
 		"port": HTTP_PORT,

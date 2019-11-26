@@ -6,6 +6,6 @@ type SMS struct {
 }
 
 type Call struct {
-	Number string
-	Input  []byte
+	Number string `json:"number"`
+	Input  []byte `json:"input,omitempty"`
 }
