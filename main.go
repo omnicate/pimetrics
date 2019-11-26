@@ -44,11 +44,11 @@ var (
 	SMSSentSuccess = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "pimetrics_sms_sent_success",
 		Help: "SMS successfully sent from number",
-	},[]string{"number"})
+	}, []string{"number"})
 	SMSSentError = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "pimetrics_sms_sent_error",
 		Help: "SMS successfully sent from number",
-	},[]string{"number"})
+	}, []string{"number"})
 )
 
 func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +74,7 @@ func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w,output)
+	fmt.Fprint(w, output)
 }
 
 func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
@@ -101,17 +101,34 @@ func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
 		log.WithError(err).Error("SendSMS failed")
 		http.Error(w, fmt.Sprintf("SendSMS failed with %v", err),
 			http.StatusInternalServerError)
-		SMSSentError.With(prometheus.Labels{"number":sms.Number}).Inc()
+		SMSSentError.With(prometheus.Labels{"number": sms.Number}).Inc()
 		return
 	}
 
-	SMSSentSuccess.With(prometheus.Labels{"number":sms.Number}).Inc()
+	SMSSentSuccess.With(prometheus.Labels{"number": sms.Number}).Inc()
 
-	fmt.Fprint(w,output)
+	fmt.Fprint(w, output)
+}
+
+func registerMetrics() {
+	if err := prometheus.Register(isUpMetric); err != nil {
+		log.WithError(err).Error("Failed register isUpMetric")
+	}
+	if err := prometheus.Register(isModemInitialised); err != nil {
+		log.WithError(err).Error("Failed register isModemInitialised")
+	}
+	if err := prometheus.Register(SMSSentSuccess); err != nil {
+		log.WithError(err).Error("Failed register SMSSentSuccess")
+	}
+	if err := prometheus.Register(SMSSentError); err != nil {
+		log.WithError(err).Error("Failed register isUpMetric")
+	}
 }
 
 func main() {
 	log.Infoln(HEADER)
+
+	registerMetrics()
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
@@ -128,6 +145,8 @@ func main() {
 			isModemInitialised.Inc()
 			log.Info("Successfully initialised modem")
 		}
+	} else {
+		isModemInitialised.Inc()
 	}
 
 	log.WithFields(log.Fields{
