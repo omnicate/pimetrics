@@ -3,6 +3,7 @@ package pi_modem
 import (
 	"errors"
 	"fmt"
+	"github.com/prometheus/common/log"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -70,6 +71,21 @@ func InitModem() error {
 	return nil
 }
 
+func SendNonBlockCommand(command string) error {
+	c := &serial.Config{Name: "/dev/serial0", Baud: 115200}
+	s, err := serial.OpenPort(c)
+	if err != nil {
+		return errors.New("SendCommandInit: " + err.Error())
+	}
+
+	_, err = s.Write([]byte(command))
+	if err != nil {
+		return errors.New("SendCommandWrite: " + err.Error())
+	}
+
+	return err
+}
+
 func SendCommand(command string) (string, error) {
 	c := &serial.Config{Name: "/dev/serial0", Baud: 115200}
 	s, err := serial.OpenPort(c)
@@ -77,7 +93,7 @@ func SendCommand(command string) (string, error) {
 		return "", errors.New("SendCommandInit: " + err.Error())
 	}
 
-	n, err := s.Write([]byte(command + "\r\n"))
+	n, err := s.Write([]byte(command))
 	if err != nil {
 		return "", errors.New("SendCommandWrite: " + err.Error())
 	}
@@ -113,18 +129,44 @@ func SendSMS(sms SMS) (string, error) {
 		return "", errors.New("SendSMS: Message is too long")
 	}
 
-	// AT+CMGS=<number><CR><message><CTRL-Z>
-	// cmd := "AT+CMGS=" + sms.Number + "\n" + sms.Text + "\n" + sms.Text + "\r\n"
-	cmd := "AT+CMGS=" + sms.Number + BREAKLINE + sms.Text + CTRL_Z
+	if setTextMode() {
 
-	fmt.Printf("===========%s\n", cmd)
+		// AT+CMGS=<number><CR><message><CTRL-Z>
+		cmd := "AT+CMGS=\"" + sms.Number + "\""+ BREAKLINE + CTRL_Z
 
-	rv, err := SendCommand(cmd)
-	if err != nil {
-		return "", errors.New("SendSMS: Failed to send SMS. Reason: " + err.Error())
+		fmt.Printf("===========%s\n", cmd)
+
+		err := SendNonBlockCommand(cmd)
+		if err != nil {
+			return "", errors.New("SendSMS: Failed to send SMS Part1. Reason: " + err.Error())
+		}
+
+		// Mui importante
+		time.Sleep(1 * time.Second)
+
+		cmd = sms.Text + BREAKLINE + CTRL_Z
+
+		fmt.Printf("===========%s\n", cmd)
+
+		rv, err := SendCommand(cmd)
+		if err != nil {
+			return "", errors.New("SendSMS: Failed to send SMS Part2. Reason: " + err.Error())
+		}
+
+
+		return rv, nil
 	}
 
-	return rv, nil
+	return "", errors.New("SendSMS: Could not set TextMode")
+}
+
+func setTextMode() bool {
+	_, err := SendCommand("AT+CMGF=1" + BREAKLINE)
+	if err != nil {
+		log.Info("SetTextMode: Failed to set Text Mode. Reason: " + err.Error())
+		return false
+	}
+	return true
 }
 
 func MakeCall(call Call) (error, string) {
