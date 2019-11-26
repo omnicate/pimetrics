@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -41,12 +42,32 @@ var (
 	})
 )
 
+func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
+	var cmd string
+
+	err := json.NewDecoder(r.Body).Decode(&cmd)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err, output := modem.SendCommand(cmd)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("SendCommand failed with %v", err),
+			http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, output)
+}
+
 func main() {
 	log.Infoln(HEADER)
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
 	http.Handle(METRICS_ENDPOINT, prom.Handler())
+	http.HandleFunc("/send_command", HandleSendCommand)
 
 	isUpMetric.Inc()
 
