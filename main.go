@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"log"
 	"net/http"
 
-	prom "github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus"
+
 	modem "pimetrics/pkg/pi-modem"
+
+	prom "github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -32,11 +34,15 @@ var (
 		Name: "pimetrics_is_up",
 		Help: "Is pimetrics system is up",
 	})
+
+	isModelInitialised = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "pimetrics_is_modem_initialised",
+		Help: "Is the pi modem initialised successfully",
+	})
 )
 
-
 func main() {
-	log.Println(HEADER)
+	log.Infoln(HEADER)
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
@@ -44,7 +50,12 @@ func main() {
 
 	isUpMetric.Inc()
 
-	modem.Dummy()
-	log.Printf("Listening on %d...\n", HTTP_PORT)
+	if err := modem.InitModem(); err != nil {
+		log.WithError(err).Error("Failed initialising modem with")
+	} else {
+		isModelInitialised.Inc()
+		log.Info("Successfully initialised modem")
+	}
+	log.Info("Listening on %d...\n", HTTP_PORT)
 	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
 }
