@@ -17,13 +17,16 @@
 
     </body>
     <script>
-        function send() {
-            let payload = document.getElementById("modemCmd").value;
 
+        function send() {
+            axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
+            axios.defaults.headers.post['Content-Type'] ='application/json;charset=utf-8';
+
+            let payload = document.getElementById("modemCmd").value;
             console.log("Sending payload: ", payload);
 
             (async () => {
-                const response = await axios.post("localhost:8080/send_command", payload);
+                const response = await axios.post("http://192.168.1.110:8080/send_command", payload);
                 console.log(response)
                 alert(response);
             })();
