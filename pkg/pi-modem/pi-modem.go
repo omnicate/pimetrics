@@ -52,16 +52,16 @@ func InitModem() error {
 	return nil
 }
 
-func SendCommand(command string) (error, string) {
+func SendCommand(command string) (string, error) {
 	c := &serial.Config{Name: "/dev/serial0", Baud: 115200}
 	s, err := serial.OpenPort(c)
 	if err != nil {
-		return errors.New("SendCommandInit: " + err.Error()), ""
+		return "", errors.New("SendCommandInit: " + err.Error())
 	}
 
-	n, err := s.Write([]byte(command+"\r\n"))
+	n, err := s.Write([]byte(command + "\r\n"))
 	if err != nil {
-		return errors.New("SendCommandWrite: " + err.Error()), ""
+		return "", errors.New("SendCommandWrite: " + err.Error())
 	}
 
 	read := 0
@@ -70,7 +70,7 @@ func SendCommand(command string) (error, string) {
 		buf := make([]byte, 512)
 		n, err = s.Read(buf)
 		if err != nil {
-			return errors.New("SendCommandRead: " + err.Error()), ""
+			return "", errors.New("SendCommandRead: " + err.Error())
 		}
 
 		read += n
@@ -79,15 +79,31 @@ func SendCommand(command string) (error, string) {
 			break
 		}
 		if read >= 7 && reflect.DeepEqual(res[read-7:read], []byte("ERROR\r\n")) {
-			return errors.New("SendCommandRead: AT " +   command + "failed:" + string(res)), ""
+			return "", errors.New("SendCommandRead: AT " + command + "failed:" + string(res))
 		}
 	}
 
-	return nil, string(res[:read])
+	return string(res[:read]), nil
 }
 
-func SendSMS(sms SMS) (error, string) {
-	return nil, "dummy"
+func SendSMS(sms SMS) (string, error) {
+	if sms.number == "" || sms.text == "" {
+		return "", errors.New("SendSMS: Number or Message is empty")
+	}
+
+	if len(sms.text) >= 140 {
+		return "", errors.New("SendSMS: Message is too long")
+	}
+
+	// AT+CMGS=<number><CR><message><CTRL-Z>
+	cmd := "AT+CMGS=" + sms.number + "\n" + sms.text + "\n" + sms.text + "\r\n"
+
+	rv, err := SendCommand(cmd)
+	if err != nil {
+		return "", errors.New("SendSMS: Failed to send SMS. Reason: " + err.Error())
+	}
+
+	return rv, nil
 }
 
 func MakeCall(call Call) (error, string) {

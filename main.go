@@ -65,7 +65,7 @@ func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err, output := modem.SendCommand(string(cmd))
+	output, err := modem.SendCommand(string(cmd))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("SendCommand failed with %v", err),
 			http.StatusInternalServerError)
