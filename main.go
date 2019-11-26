@@ -66,7 +66,7 @@ func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	output, err := modem.SendCommand(string(cmd))
+	output, err := modem.SendCommand(string(cmd) + modem.BREAKLINE + modem.CTRL_Z)
 	if err != nil {
 		log.WithError(err).Error("SendCommand failed")
 		http.Error(w, fmt.Sprintf("SendCommand failed with %v", err),
@@ -74,7 +74,7 @@ func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info(output)
+	fmt.Fprint(w,output)
 }
 
 func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +104,7 @@ func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info(output)
+	fmt.Fprint(w,output)
 }
 
 func main() {

@@ -132,7 +132,7 @@ func SendSMS(sms SMS) (string, error) {
 	if setTextMode() {
 
 		// AT+CMGS=<number><CR><message><CTRL-Z>
-		cmd := "AT+CMGS=\"" + sms.Number + "\""+ BREAKLINE + CTRL_Z
+		cmd := "AT+CMGS=\"" + sms.Number + "\""+ BREAKLINE
 
 		fmt.Printf("===========%s\n", cmd)
 
@@ -144,7 +144,7 @@ func SendSMS(sms SMS) (string, error) {
 		// Mui importante
 		time.Sleep(1 * time.Second)
 
-		cmd = sms.Text + BREAKLINE + CTRL_Z
+		cmd = sms.Text + CTRL_Z
 
 		fmt.Printf("===========%s\n", cmd)
 
