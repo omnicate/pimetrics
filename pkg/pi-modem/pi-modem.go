@@ -21,10 +21,13 @@ const (
 	VALUE_GPIO6     = "/sys/class/gpio/gpio6/value"
 
 	MODE = 0644
+
+	CTRL_Z    = string(26)
+	BREAKLINE = string(13)
 )
 
 func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
+	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	} else {
@@ -102,16 +105,19 @@ func SendCommand(command string) (string, error) {
 }
 
 func SendSMS(sms SMS) (string, error) {
-	if sms.number == "" || sms.text == "" {
+	if sms.Number == "" || sms.Text == "" {
 		return "", errors.New("SendSMS: Number or Message is empty")
 	}
 
-	if len(sms.text) >= 140 {
+	if len(sms.Text) >= 140 {
 		return "", errors.New("SendSMS: Message is too long")
 	}
 
 	// AT+CMGS=<number><CR><message><CTRL-Z>
-	cmd := "AT+CMGS=" + sms.number + "\n" + sms.text + "\n" + sms.text + "\r\n"
+	// cmd := "AT+CMGS=" + sms.Number + "\n" + sms.Text + "\n" + sms.Text + "\r\n"
+	cmd := "AT+CMGS=" + sms.Number + BREAKLINE + sms.Text + CTRL_Z
+
+	fmt.Printf("===========%s\n", cmd)
 
 	rv, err := SendCommand(cmd)
 	if err != nil {

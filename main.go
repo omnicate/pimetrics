@@ -68,6 +68,7 @@ func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 
 	output, err := modem.SendCommand(string(cmd))
 	if err != nil {
+		log.WithError(err).Error("SendCommand failed")
 		http.Error(w, fmt.Sprintf("SendCommand failed with %v", err),
 			http.StatusInternalServerError)
 		return
@@ -90,8 +91,14 @@ func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.WithFields(log.Fields{
+		"number": sms.Number,
+		"text":   sms.Text,
+	}).Info("Sending sms with the following details")
+
 	output, err := modem.SendSMS(sms)
 	if err != nil {
+		log.WithError(err).Error("SendSMS failed")
 		http.Error(w, fmt.Sprintf("SendSMS failed with %v", err),
 			http.StatusInternalServerError)
 		return
@@ -119,7 +126,7 @@ func main() {
 			log.Info("Successfully initialised modem")
 		}
 	}
-	
+
 	log.Info("Listening on " + string(HTTP_PORT))
 	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
 }
