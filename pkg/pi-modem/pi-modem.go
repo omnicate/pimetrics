@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/tarm/serial"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
