@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"time"
 
 	"github.com/tarm/serial"
@@ -58,17 +59,39 @@ func SendCommand(command string) (error, string) {
 		return errors.New("SendCommandInit: " + err.Error()), ""
 	}
 
-	n, err := s.Write([]byte(command))
+	n, err := s.Write([]byte(command+"\r\n"))
 	if err != nil {
 		return errors.New("SendCommandWrite: " + err.Error()), ""
 	}
 
-	buf := make([]byte, 128)
-	n, err = s.Read(buf)
-	if err != nil {
-		return errors.New("SendCommandRead: " + err.Error()), ""
-	}
-	log.Printf("%q", buf[:n])
+	read := 0
+	var res []byte
+	for {
+		buf := make([]byte, 512)
+		n, err = s.Read(buf)
+		if err != nil {
+			return errors.New("SendCommandRead: " + err.Error()), ""
+		}
 
-	return nil, string(buf[:n])
+		read += n
+		res = append(res, buf[:n]...)
+		log.Println("Read %d bytes. Buffer now contains: %v", n, res)
+		if read >= 4 && reflect.DeepEqual(res[read-4:read], []byte("OK\r\n")) {
+			break
+		}
+		if read >= 7 && reflect.DeepEqual(res[read-7:read], []byte("ERROR\r\n")) {
+			log.Println("AT%s failed with ERROR: %v", command, string(res))
+		}
+	}
+	log.Printf("%q", res[:read])
+
+	return nil, string(res[:read])
+}
+
+func SendSMS(sms SMS) (error, string) {
+	return nil, "dummy"
+}
+
+func MakeCall(call Call) (error, string) {
+	return nil, "dummy"
 }
