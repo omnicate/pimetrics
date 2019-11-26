@@ -183,7 +183,7 @@ func MakeCall(call Call) (string, error) {
 	}
 
 	// We are not done yet ... sleep and wait then read again and check for some other endword ... like VOICE END
-	rv, err = readUntil("NO CARRIER", 50)
+	rv, err = readUntil("VOICE CALLL: BEGIN", 50)
 	if err != nil {
 		return "", errors.New("MakeCall: Failed to end call. Reason: " + err.Error())
 	}
@@ -193,7 +193,7 @@ func MakeCall(call Call) (string, error) {
 }
 
 func readUntil(terminator string, timeout int) (string, error) {
-	 expiry := time.Now().Add(time.Duration(timeout) * time.Second)
+	expiry := time.Now().Add(time.Duration(timeout) * time.Second)
 
 	c := &serial.Config{Name: "/dev/serial0", Baud: 115200}
 	s, err := serial.OpenPort(c)
@@ -202,7 +202,7 @@ func readUntil(terminator string, timeout int) (string, error) {
 	}
 
 	terminator = terminator + BREAKLINE + CTRL_Z
-	
+
 	read := 0
 	var res []byte
 	for {

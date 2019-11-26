@@ -213,6 +213,9 @@ func HandleMakeCall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	handlerMutex.Lock()
+	defer handlerMutex.Unlock()
+
 	var call modem.Call
 
 	err := json.NewDecoder(r.Body).Decode(&call)
@@ -223,7 +226,7 @@ func HandleMakeCall(w http.ResponseWriter, r *http.Request) {
 
 	log.WithFields(log.Fields{
 		"number": call.Number,
-		"input":   call.Input,
+		"input":  call.Input,
 	}).Info("Making Call with the following details")
 
 	output, err := modem.MakeCall(call)
@@ -231,13 +234,13 @@ func HandleMakeCall(w http.ResponseWriter, r *http.Request) {
 		log.WithError(err).Error("MakeCall failed")
 		http.Error(w, fmt.Sprintf("MakeCall failed with %v", err),
 			http.StatusInternalServerError)
-		CallError.With(prometheus.Labels{"number":call.Number}).Inc()
+		CallError.With(prometheus.Labels{"number": call.Number}).Inc()
 		return
 	}
 
-	CallSuccess.With(prometheus.Labels{"number":call.Number}).Inc()
+	CallSuccess.With(prometheus.Labels{"number": call.Number}).Inc()
 
-	fmt.Fprint(w,output)
+	fmt.Fprint(w, output)
 }
 
 func main() {
