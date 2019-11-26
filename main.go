@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"log"
 	"net/http"
 
 	prom "github.com/prometheus/client_golang/prometheus/promhttp"
+	modem "pimetrics/pkg/pi-modem"
 )
 
 const (
@@ -25,6 +27,14 @@ const (
 `
 )
 
+var (
+	isUpMetric = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "pimetrics_is_up",
+		Help: "Is pimetrics system is up",
+	})
+)
+
+
 func main() {
 	log.Println(HEADER)
 
@@ -33,6 +43,8 @@ func main() {
 	http.Handle(METRICS_ENDPOINT, prom.Handler())
 
 	isUpMetric.Inc()
+
+	modem.Dummy()
 	log.Printf("Listening on %d...\n", HTTP_PORT)
 	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
 }
