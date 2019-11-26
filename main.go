@@ -127,6 +127,9 @@ func main() {
 		}
 	}
 
-	log.Info("Listening on " + string(HTTP_PORT))
+	log.WithFields(log.Fields{
+		"port": HTTP_PORT,
+	}).Info("Listening on ")
+
 	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
 }

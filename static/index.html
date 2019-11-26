@@ -31,6 +31,12 @@
             <h2>SMS sending</h2>
             <form>
                 <div class="row my-3">
+                    <div class="col-md=1">
+                        <select class="form-control" id="country">
+                            <option selected=>+47</option>
+                            <option>+46</option>
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <input id="smsNum" type="text" class="form-control" placeholder="Number" />
                     </div>
@@ -82,8 +88,9 @@
         }
 
         function sendSMS() {
+            const country = document.getElementById("country").options[e.selectedIndex].value
             let payload = {
-                "number": document.getElementById("smsNum").value,
+                "number": country + document.getElementById("smsNum").value,
                 "text": document.getElementById("msg").value
             };
 
