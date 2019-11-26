@@ -36,7 +36,7 @@ var (
 		Help: "Is pimetrics system is up",
 	})
 
-	isModelInitialised = prometheus.NewCounter(prometheus.CounterOpts{
+	isModemInitialised = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "pimetrics_is_modem_initialised",
 		Help: "Is the pi modem initialised successfully",
 	})
@@ -74,7 +74,7 @@ func main() {
 	if err := modem.InitModem(); err != nil {
 		log.WithError(err).Error("Failed initialising modem with")
 	} else {
-		isModelInitialised.Inc()
+		isModemInitialised.Inc()
 		log.Info("Successfully initialised modem")
 	}
 	log.Info("Listening on %d...\n", HTTP_PORT)
