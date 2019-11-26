@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-    <header>
+    <head>
         <title>PI Metrics</title>
         <!-- Required meta tags -->
         <meta charset="utf-8">
@@ -8,89 +8,68 @@
 
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    </header>
+        <style>
+            main.container {
+                margin-top: 50px;
+            }
+            .flex-field {
+                display: flex;
+            }
+
+            .flex-field select {
+                width: 80px;
+                margin-right: 10px;
+            }
+
+            input, textarea {
+                margin-bottom: 16px;
+            }
+        </style>
+    </head>
 
     <body>
-        <h2>This is a ugly HTML page</h2>
-
-        <div class="container-fluid">
-
+        <main class="container">
             <div class="row">
                 <div class="col">
-                <input id="modemCmd" type="text" class="form-control" placeholder="Modem command" />
+                    <h3>Attention (AT) commands</h3>
+                    <input id="modemCmd" type="text" class="form-control" placeholder="Ex. ath, atz, atz+cmgf=1"/>
+                    <button onclick="send()" class="btn btn-primary">Send</button>
+                    <hr>
+                    <h3>SMS sending</h3>
+                    <form>
+                        <div class="flex-field">
+                            <select class="form-control" id="country">
+                                <option selected=>+47</option>
+                                <option>+46</option>
+                            </select>
+                            <input id="smsNum" type="text" class="form-control" placeholder="Number"/>
+                        </div>
+                        <textarea id="msg" class="form-control" placeholder="Message"></textarea>
+                        <button type="button" onclick="sendSMS()" class="btn btn-primary">Send SMS</button>
+                    </form>
+                    <hr>
+                    <h3>Make Call</h3>
+                    <form>
+                        <div class="flex-field">
+                            <select class="form-control" id="callCountry">
+                                <option selected=>+47</option>
+                                <option>+46</option>
+                            </select>
+                            <input id="callNum" type="text" class="form-control" placeholder="Number"/>
+                        </div>
+                        <button type="button" onclick="call()" class="btn btn-primary">Call</button>
+                    </form>
                 </div>
                 <div class="col">
-                    <button onclick="send()" class="btn btn-primary">Send</button>
+                    <h3>Output</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <pre id="output">Waiting...</pre>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <br /> <br />
-
-        <div class="container-fluid">
-            <h2>SMS sending</h2>
-            <form>
-                <div class="row my-3">
-                    <div class="col-md=1">
-                        <select class="form-control" id="country">
-                            <option selected=>+47</option>
-                            <option>+46</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input id="smsNum" type="text" class="form-control" placeholder="Number" />
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col-md-4">
-                        <textarea id="msg" class="form-control" placeholder="Message"></textarea>
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col">
-                        <button type="button" onclick="sendSMS()" class="btn btn-primary">Send SMS</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <br /> <br />
-
-        <div class="container-fluid">
-            <h2>Make Call</h2>
-            <form>
-                <div class="row my-3">
-                    <div class="col-md=1">
-                        <select class="form-control" id="callCountry">
-                            <option selected=>+47</option>
-                            <option>+46</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input id="callNum" type="text" class="form-control" placeholder="Number" />
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="col">
-                        <button type="button" onclick="call()" class="btn btn-primary">Call</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <br /> <br />
-
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-header">
-                    Output
-                </div>
-                <div class="card-body">
-                    <h5 id="output"class="card-title">Here goes output</h5>
-                </div>
-            </div>
-        </div>
-
+        </main>
         <script src="js/axios.min.js"></script>
         <!-- <script src="js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script> -->
     </body>
@@ -98,7 +77,7 @@
 
         function send() {
             axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
-            axios.defaults.headers.post['Content-Type'] ='application/json;charset=utf-8';
+            axios.defaults.headers.post['Content-Type'] = 'application/json;charset=utf-8';
 
             let payload = document.getElementById("modemCmd").value;
             console.log("Sending payload: ", payload);
@@ -106,7 +85,6 @@
             (async () => {
                 const response = await axios.post("http://192.168.1.110:8080/send_command", payload);
                 console.log(response)
-
                 document.getElementById("output").innerText = response.data;
             })();
         }
