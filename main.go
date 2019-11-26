@@ -43,6 +43,11 @@ var (
 )
 
 func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Only POST requests are valid", http.StatusBadRequest)
+		return
+	}
+
 	var cmd string
 
 	err := json.NewDecoder(r.Body).Decode(&cmd)

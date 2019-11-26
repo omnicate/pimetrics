@@ -1,6 +1,7 @@
 <html>
     <header<>
         <title>PI Metrics</title>
+        <script src="js/axios.min.js"></script>
     </header>
 
     <body>
@@ -17,7 +18,15 @@
     </body>
     <script>
         function send() {
-            alert("sending data");
+            let payload = document.getElementById("modemCmd").value;
+
+            console.log("Sending payload: ", payload);
+
+            (async () => {
+                const response = await axios.post("localhost:8080/send_command", payload);
+                console.log(response)
+                alert(response);
+            })();
         }
     </script>
 </html>
