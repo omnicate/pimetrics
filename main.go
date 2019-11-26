@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -48,15 +48,24 @@ func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var cmd string
+	// var cmd string
 
-	err := json.NewDecoder(r.Body).Decode(&cmd)
+	// err := json.NewDecoder(r.Body).Decode(&cmd)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
+
+	cmd, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Failed getting command from body with %v", err),
+			http.StatusBadRequest)
 		return
 	}
 
-	err, output := modem.SendCommand(cmd)
+	err, output := modem.SendCommand(string(cmd))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("SendCommand failed with %v", err),
 			http.StatusInternalServerError)
