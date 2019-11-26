@@ -41,6 +41,14 @@ var (
 		Name: "pimetrics_is_modem_initialised",
 		Help: "Is the pi modem initialised successfully",
 	})
+	SMSSentSuccess = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "pimetrics_sms_sent_success",
+		Help: "SMS successfully sent from number",
+	},[]string{"number"})
+	SMSSentError = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "pimetrics_sms_sent_error",
+		Help: "SMS successfully sent from number",
+	},[]string{"number"})
 )
 
 func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
@@ -48,14 +56,6 @@ func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST requests are valid", http.StatusBadRequest)
 		return
 	}
-
-	// var cmd string
-
-	// err := json.NewDecoder(r.Body).Decode(&cmd)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
 
 	cmd, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -101,8 +101,11 @@ func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
 		log.WithError(err).Error("SendSMS failed")
 		http.Error(w, fmt.Sprintf("SendSMS failed with %v", err),
 			http.StatusInternalServerError)
+		SMSSentError.With(prometheus.Labels{"number":sms.Number}).Inc()
 		return
 	}
+
+	SMSSentSuccess.With(prometheus.Labels{"number":sms.Number}).Inc()
 
 	fmt.Fprint(w,output)
 }
