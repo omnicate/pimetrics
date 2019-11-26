@@ -75,15 +75,13 @@ func SendCommand(command string) (error, string) {
 
 		read += n
 		res = append(res, buf[:n]...)
-		log.Println("Read %d bytes. Buffer now contains: %v", n, res)
 		if read >= 4 && reflect.DeepEqual(res[read-4:read], []byte("OK\r\n")) {
 			break
 		}
 		if read >= 7 && reflect.DeepEqual(res[read-7:read], []byte("ERROR\r\n")) {
-			log.Println("AT%s failed with ERROR: %v", command, string(res))
+			return errors.New("SendCommandRead: AT " +   command + "failed:" + string(res)), ""
 		}
 	}
-	log.Printf("%q", res[:read])
 
 	return nil, string(res[:read])
 }
