@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -72,7 +73,31 @@ func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, output)
+	log.Info(output)
+}
+
+func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Only POST requests are valid", http.StatusBadRequest)
+		return
+	}
+
+	var sms modem.SMS
+
+	err := json.NewDecoder(r.Body).Decode(&sms)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	output, err := modem.SendSMS(sms)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("SendSMS failed with %v", err),
+			http.StatusInternalServerError)
+		return
+	}
+
+	log.Info(output)
 }
 
 func main() {
@@ -82,6 +107,7 @@ func main() {
 	http.Handle("/", fs)
 	http.Handle(METRICS_ENDPOINT, prom.Handler())
 	http.HandleFunc("/send_command", HandleSendCommand)
+	http.HandleFunc("/send_sms", HandleSendSMS)
 
 	isUpMetric.Inc()
 
@@ -91,6 +117,6 @@ func main() {
 		isModemInitialised.Inc()
 		log.Info("Successfully initialised modem")
 	}
-	log.Info("Listening on" + string(HTTP_PORT))
+	log.Info("Listening on " + string(HTTP_PORT))
 	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
 }

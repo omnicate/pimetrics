@@ -2,8 +2,8 @@ package pi_modem
 
 
 type SMS struct {
-	number	string
-	text	string
+	number	string `json:"number"`
+	text	string `json:"text"`
 }
 
 type Call struct {
