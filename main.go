@@ -111,12 +111,15 @@ func main() {
 
 	isUpMetric.Inc()
 
-	if err := modem.InitModem(); err != nil {
-		log.WithError(err).Error("Failed initialising modem with")
-	} else {
-		isModemInitialised.Inc()
-		log.Info("Successfully initialised modem")
+	if !modem.ModemInitialized() {
+		if err := modem.InitModem(); err != nil {
+			log.WithError(err).Error("Failed initialising modem with")
+		} else {
+			isModemInitialised.Inc()
+			log.Info("Successfully initialised modem")
+		}
 	}
+	
 	log.Info("Listening on " + string(HTTP_PORT))
 	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
 }

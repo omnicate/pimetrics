@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"time"
 
@@ -23,6 +24,22 @@ const (
 
 	MODE = 0644
 )
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	} else {
+		return true
+	}
+}
+
+func ModemInitialized() bool {
+	if fileExists("/sys/class/gpio/gpio4") && fileExists("/sys/class/gpio/gpio6") {
+		return true
+	}
+	return false
+}
 
 func InitModem() error {
 	if err := ioutil.WriteFile(EXPORT_GPIO, []byte("4"), MODE); err != nil {
