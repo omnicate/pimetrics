@@ -57,6 +57,30 @@
         <br /> <br />
 
         <div class="container-fluid">
+            <h2>SMS sending</h2>
+            <form>
+                <div class="row my-3">
+                    <div class="col-md=1">
+                        <select class="form-control" id="callCountry">
+                            <option selected=>+47</option>
+                            <option>+46</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input id="callNum" type="text" class="form-control" placeholder="Number" />
+                    </div>
+                </div>
+                <div class="row my-3">
+                    <div class="col">
+                        <button type="button" onclick="call()" class="btn btn-primary">Call</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <br /> <br />
+
+        <div class="container-fluid">
             <div class="card">
                 <div class="card-header">
                     Ouput
@@ -98,6 +122,22 @@
             console.log("Sending payload: ", payload);
             (async () => {
                 const response = await axios.post("http://192.168.1.110:8080/send_sms", payload);
+                console.log(response)
+
+                document.getElementById("output").innerText = response.data;
+            })();
+        }
+
+        function call() {
+            const countrySelect = document.getElementById("callCountry")
+            const country = countrySelect.options[countrySelect.selectedIndex].value
+            let payload = {
+                "number": country + document.getElementById("callNum").value
+            };
+
+            console.log("Sending payload: ", payload);
+            (async () => {
+                const response = await axios.post("http://192.168.1.110:8080/make_call", payload);
                 console.log(response)
 
                 document.getElementById("output").innerText = response.data;
