@@ -88,7 +88,8 @@
         }
 
         function sendSMS() {
-            const country = document.getElementById("country").options[e.selectedIndex].value
+            const countrySelect = document.getElementById("country")
+            const country = countrySelect.options[countrySelect.selectedIndex].value
             let payload = {
                 "number": country + document.getElementById("smsNum").value,
                 "text": document.getElementById("msg").value

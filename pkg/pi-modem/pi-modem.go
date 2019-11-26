@@ -3,11 +3,12 @@ package pi_modem
 import (
 	"errors"
 	"fmt"
-	"github.com/prometheus/common/log"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/prometheus/common/log"
 
 	"github.com/tarm/serial"
 )
@@ -132,7 +133,7 @@ func SendSMS(sms SMS) (string, error) {
 	if setTextMode() {
 
 		// AT+CMGS=<number><CR><message><CTRL-Z>
-		cmd := "AT+CMGS=\"" + sms.Number + "\""+ BREAKLINE
+		cmd := "AT+CMGS=\"" + sms.Number + "\"" + BREAKLINE
 
 		fmt.Printf("===========%s\n", cmd)
 
@@ -152,7 +153,6 @@ func SendSMS(sms SMS) (string, error) {
 		if err != nil {
 			return "", errors.New("SendSMS: Failed to send SMS Part2. Reason: " + err.Error())
 		}
-
 
 		return rv, nil
 	}
