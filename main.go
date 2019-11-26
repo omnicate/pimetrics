@@ -82,6 +82,6 @@ func main() {
 		isModemInitialised.Inc()
 		log.Info("Successfully initialised modem")
 	}
-	log.Info("Listening on %d...\n", HTTP_PORT)
+	log.Info("Listening on" + string(HTTP_PORT))
 	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
 }
