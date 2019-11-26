@@ -1,20 +1,54 @@
-<html>
-    <header<>
+<!DOCTYPE html>
+<html lang="en">
+    <header>
         <title>PI Metrics</title>
-        <script src="js/axios.min.js"></script>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     </header>
 
     <body>
-        <h2>This is a ungly HTML page</h2>
-        <table>
+        <h2>This is a ugly HTML page</h2>
+
+        <div class="container-fluid">
+            <form>
+                <div class="row">
+                    <div class="col">
+                    <input type="text" class="form-control" placeholder="Modem command">
+                    </div>
+                    <div class="col">
+                        <button type="submit" onclick="send()" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- <table>
             <tr>
                 <td><input id="modemCmd" placeholder="Enter modem command" type="text"/></td>
                 <td><button id="send" onclick="send()">Send</button></td>
             </tr>
-        </table>
+        </table> -->
+        <br /> <br />
 
-        <div id="output">Here goes output</div>
+        <div class="container-fluid">
+            <!-- <div id="output">Here goes output</div> -->
 
+            <div class="card">
+                <div class="card-header">
+                    Ouput
+                </div>
+                <div class="card-body">
+                    <h5 id="output"class="card-title">Here goes output</h5>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/axios.min.js"></script>
+        <script src="js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     </body>
     <script>
 
@@ -28,7 +62,8 @@
             (async () => {
                 const response = await axios.post("http://192.168.1.110:8080/send_command", payload);
                 console.log(response)
-                alert(response);
+
+                document.getElementById("output").innerText = response.data;
             })();
         }
     </script>
