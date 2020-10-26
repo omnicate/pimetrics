@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-
-	"github.com/prometheus/client_golang/prometheus"
+	"time"
 
 	modem "pimetrics/pkg/pi-modem"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/warthog618/modem/gsm"
 
 	prom "github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -61,6 +63,8 @@ var (
 	}, []string{"number"})
 
 	handlerMutex = &sync.Mutex{}
+
+	gModem *gsm.GSM
 )
 
 func registerMetrics() {
@@ -128,18 +132,30 @@ func setUpStatus() {
 func init() {
 	registerMetrics()
 
-	if !modem.ModemInitialized() {
-		if err := modem.InitModem(); err != nil {
-			log.WithError(err).Error("Failed initialising modem with")
-		} else {
-			isModemInitialised.Inc()
-			log.Info("Successfully initialised modem")
-		}
+	var err error
+	gModem, err = modem.InitModemV2(&modem.ModemConfig{
+		Baud:           9600,
+		Device:         "/dev/ttyUSB0",
+		DefaultTimeout: time.Minute,
+	}, []gsm.Option{})
+	if err != nil {
+		log.WithError(err).Error("Failed initialising modem with")
 	} else {
 		isModemInitialised.Inc()
+		log.Info("Successfully initialised modem")
 	}
+	// if !modem.ModemInitialized() {
+	// 	if err := modem.InitModem(); err != nil {
+	// 		log.WithError(err).Error("Failed initialising modem with")
+	// 	} else {
+	// 		isModemInitialised.Inc()
+	// 		log.Info("Successfully initialised modem")
+	// 	}
+	// } else {
+	// 	isModemInitialised.Inc()
+	// }
 
-	setUpStatus()
+	//setUpStatus()
 }
 
 func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
@@ -252,6 +268,8 @@ func main() {
 	http.HandleFunc("/send_command", HandleSendCommand)
 	http.HandleFunc("/send_sms", HandleSendSMS)
 	http.HandleFunc("/make_call", HandleMakeCall)
+
+	registerV2Api()
 
 	log.WithFields(log.Fields{
 		"port": HTTP_PORT,

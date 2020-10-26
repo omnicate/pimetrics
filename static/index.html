@@ -83,7 +83,8 @@
             console.log("Sending payload: ", payload);
 
             (async () => {
-                const response = await axios.post("http://192.168.1.110:8080/send_command", payload);
+                // const response = await axios.post("http://192.168.1.48:8080/send_command", payload);
+                const response = await axios.post("http://192.168.1.48:8080/v2/send_command", payload);
                 console.log(response)
                 document.getElementById("output").innerText = response.data;
             })();
@@ -99,7 +100,8 @@
 
             console.log("Sending payload: ", payload);
             (async () => {
-                const response = await axios.post("http://192.168.1.110:8080/send_sms", payload);
+                // const response = await axios.post("http://192.168.1.48:8080/send_sms", payload);
+                const response = await axios.post("http://192.168.1.48:8080/v2/send_sms", payload);
                 console.log(response)
 
                 document.getElementById("output").innerText = response.data;
@@ -115,7 +117,7 @@
 
             console.log("Sending payload: ", payload);
             (async () => {
-                const response = await axios.post("http://192.168.1.110:8080/make_call", payload);
+                const response = await axios.post("http://192.168.1.48:8080/make_call", payload);
                 console.log(response)
 
                 document.getElementById("output").innerText = response.data;
