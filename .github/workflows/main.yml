@@ -41,7 +41,10 @@ jobs:
           GOOS=linux GOARCH=arm go build -o dist/linux/arm/pimetrics
           cp -r ./static dist/linux/arm/
           pushd dist/linux/arm
+          echo RUNNING TAR
           tar -cvzf pimetrics-$TAGNAME.linux-arm.tar.gz ./
+          sleep 5
+          echo FINISH TAR, starting copy
           cp pimetrics-$TAGNAME.linux-arm.tar.gz ../../packages/
           popd
           
