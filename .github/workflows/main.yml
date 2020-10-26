@@ -39,14 +39,17 @@ jobs:
           cd $GITHUB_WORKSPACE
           export TAGNAME="${GITHUB_REF##*/}"
           go get
+          echo BUILDING LINUX ARM
           GOOS=linux GOARCH=arm go build -o dist/linux/arm/pimetrics
           cp -r ./static dist/linux/arm/
           pushd dist/linux/arm
-          ls ./
-          ls ../../packages
-          echo RUNNING TAR
           tar -cvzf ../../packages/pimetrics-$TAGNAME.linux-arm.tar.gz ./
-          echo FINISH TAR
+          popd
+          echo BUILDING LINUX ARM64
+          GOOS=linux GOARCH=arm64 go build -o dist/linux/arm/pimetrics
+          cp -r ./static dist/linux/arm64/
+          pushd dist/linux/arm64
+          tar -cvzf ../../packages/pimetrics-$TAGNAME.linux-arm64.tar.gz ./
           popd
           
       - name: Github Release
