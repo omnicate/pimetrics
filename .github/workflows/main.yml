@@ -50,7 +50,7 @@ jobs:
           popd
           
       - name: Github Release
-        uses: elgohr/Github-Release-Action@v3.1
+        uses: elgohr/Github-Release-Action@master
         with:
           # The name of the release to publish
           release: $GITHUB_REF
