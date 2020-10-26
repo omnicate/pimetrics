@@ -50,12 +50,12 @@ jobs:
           popd
           
       - name: Github Release
-        uses: elgohr/Github-Release-Action@master
-        with:
-          # The name of the release to publish
-          release: $GITHUB_REF
+        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}          
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+            
       - name: Release
         uses: fnkr/github-action-ghr@v1
         if: startsWith(github.ref, 'refs/tags/')
