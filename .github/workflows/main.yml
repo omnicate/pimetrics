@@ -42,10 +42,9 @@ jobs:
           cp -r ./static dist/linux/arm/
           pushd dist/linux/arm
           echo RUNNING TAR
-          tar -cvzf pimetrics-$TAGNAME.linux-arm.tar.gz ./
+          tar -cvzf ../../packages/pimetrics-$TAGNAME.linux-arm.tar.gz ./
           sleep 5
-          echo FINISH TAR, starting copy
-          cp pimetrics-$TAGNAME.linux-arm.tar.gz ../../packages/
+          echo FINISH TAR
           popd
           
       - name: Github Release
