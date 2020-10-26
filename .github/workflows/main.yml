@@ -45,6 +45,8 @@ jobs:
           pushd dist/linux/arm
           tar -cvzf ../../packages/pimetrics-$TAGNAME.linux-arm.tar.gz ./
           popd
+          go clean
+          go get
           echo BUILDING LINUX ARM64
           GOOS=linux GOARCH=arm64 go build -o dist/linux/arm/pimetrics
           cp -r ./static dist/linux/arm64/
