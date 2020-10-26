@@ -1,0 +1,13 @@
+[Unit]
+Description=Pi Metrics Smoketest Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=/home/ubuntu/pimetrics_arm
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
