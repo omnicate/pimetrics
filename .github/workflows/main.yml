@@ -36,12 +36,13 @@ jobs:
       - name: Build
         run: |
           cd $GITHUB_WORKSPACE
+          export TAGNAME="${GITHUB_REF##*/}"
           go get
           GOOS=linux GOARCH=arm go build -o dist/linux/arm/pimetrics
           cp -r ./static dist/linux/arm/
           pushd dist/linux/arm
-          tar -cvzf pimetrics-$GITHUB_REF.darwin-amd64.tar.gz ./
-          cp pimetrics-$GITHUB_REF.darwin-amd64.tar.gz ../../packages/
+          tar -cvzf pimetrics-$TAGNAME.linux-arm.tar.gz ./
+          cp pimetrics-$TAGNAME.linux-arm.tar.gz ../../packages/
           popd
           
       - name: Github Release
