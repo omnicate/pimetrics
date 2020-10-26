@@ -28,6 +28,7 @@ jobs:
       - name: Create Folders
         run: |
           mkdir dist
+          mkdir dist/packages
           mkdir dist/linux
           mkdir dist/linux/arm
           mkdir dist/linux/arm64
@@ -41,9 +42,10 @@ jobs:
           GOOS=linux GOARCH=arm go build -o dist/linux/arm/pimetrics
           cp -r ./static dist/linux/arm/
           pushd dist/linux/arm
+          ls ./
+          ls ../../packages
           echo RUNNING TAR
           tar -cvzf ../../packages/pimetrics-$TAGNAME.linux-arm.tar.gz ./
-          sleep 5
           echo FINISH TAR
           popd
           
