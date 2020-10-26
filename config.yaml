@@ -1,0 +1,15 @@
+---
+pi3:
+  tenent: vimla
+  msisdn: 46724430313 # DeviceLab7
+  type: arm64
+  sw_version: 1.0.0
+  config: |
+    some_yaml: yaml
+pi4:
+  tenent: vimla
+  msisdn: 46724424099 # DeviceLab6
+  type: arm64
+  sw_version: 1.0.0
+  config: |
+    some_yaml: yaml
