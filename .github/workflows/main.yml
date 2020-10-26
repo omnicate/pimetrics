@@ -24,14 +24,25 @@ jobs:
         with:
           # The Go version to download (if necessary) and use. Supports semver spec and ranges.
           go-version: 1.15
-
+        
+      - name: Create Folders
+        run: |
+          mkdir dist
+          mkdir dist/linux
+          mkdir dist/linux/arm
+          mkdir dist/linux/arm64
+          
       # Runs a set of commands using the runners shell
       - name: Build
         run: |
           cd $GITHUB_WORKSPACE
           go get
-          GOOS=linux GOARCH=arm go build -o dist/pimetrics && cp -r ./static dist/pimetrics/ && cd dist && tar -cvzf pimetrics-$GITHUB_REF.darwin-amd64.tar.gz pimetrics && rm pimetrics && cd ..
-          
+          GOOS=linux GOARCH=arm go build -o dist/linux/arm/pimetrics
+          cp -r ./static dist/linux/arm/
+          pushd dist/linux/arm
+          tar -cvzf pimetrics-$GITHUB_REF.darwin-amd64.tar.gz ./
+          cp pimetrics-$GITHUB_REF.darwin-amd64.tar.gz ../../packages/
+          popd
           
       - name: Github Release
         uses: elgohr/Github-Release-Action@v3.1
@@ -43,5 +54,5 @@ jobs:
         uses: fnkr/github-action-ghr@v1
         if: startsWith(github.ref, 'refs/tags/')
         env:
-          GHR_PATH: dist/
+          GHR_PATH: dist/packages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
