@@ -6,9 +6,6 @@ on:
   create:
     tags: 
       - v*
-  push:
-    tags: 
-      - v*
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -33,7 +30,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           go get
-          GOOS=darwin GOARCH=amd64 go build -o dist/pimetrics && cp -r ./static dist/pimetrics/ && cd dist && tar -cvzf pimetrics-$GITHUB_REF.darwin-amd64.tar.gz pimetrics && rm pimetrics && cd ..
+          GOOS=linux GOARCH=arm go build -o dist/pimetrics && cp -r ./static dist/pimetrics/ && cd dist && tar -cvzf pimetrics-$GITHUB_REF.darwin-amd64.tar.gz pimetrics && rm pimetrics && cd ..
           
           
       - name: Github Release
