@@ -10,6 +10,6 @@ pi4:
   tenent: vimla
   msisdn: 46724424099 # DeviceLab6
   target: arm64
-  sw_version: 1.0.0
+  sw_version: 0.0.17
   config: |
     some_yaml: yaml
