@@ -31,10 +31,9 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build
         run: |
-          go get github.com/mitchellh/gox
           cd $GITHUB_WORKSPACE
           go get
-          gox -rebuild --osarch="darwin/amd64"  -ldflags "$GO_LDFLAGS" -output "dist/pimetrics" && cp -r ./static dist/pimetrics/ && cd dist && tar -cvzf pimetrics-$GITHUB_REF.darwin-amd64.tar.gz pimetrics && rm pimetrics && cd ..
+          GOOS=darwin GOARCH=amd64 go build -o dist/pimetrics && cp -r ./static dist/pimetrics/ && cd dist && tar -cvzf pimetrics-$GITHUB_REF.darwin-amd64.tar.gz pimetrics && rm pimetrics && cd ..
           
           
       - name: Github Release
