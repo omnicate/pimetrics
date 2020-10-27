@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	modem "pimetrics/pkg/pi-modem"
@@ -12,10 +11,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
+
+	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/modem/at"
 	"github.com/warthog618/modem/gsm"
+)
+
+var (
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 )
 
 func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
@@ -138,12 +148,25 @@ func HandleSmsReceiveMode(w http.ResponseWriter, r *http.Request) {
 	err := gModem.StartMessageRx(
 		func(msg gsm.Message) {
 			log.WithField("message", msg.Message).Infof("Recieved SMS from %s", msg.Number)
+			for client := range wsClients {
+				err := client.WriteJSON(modem.SMS{
+					Text:   msg.Message,
+					Number: msg.Number,
+				})
+				if err != nil {
+					log.WithError(err).Error("Failed sending sms message to web socket")
+					client.Close()
+					delete(wsClients, client)
+				}
+			}
 		},
 		func(err error) {
 			log.WithError(err).Error("Failed reciving sms")
 		})
 	if err != nil {
 		log.WithError(err).Error("StartMessageRx failed")
+		http.Error(w, fmt.Sprintf("StartMessageRx failed %v", err), http.StatusInternalServerError)
+		return
 	}
 
 	log.Info("Waiting for SMS")
@@ -303,4 +326,16 @@ func signalQualityReadable(iQual int) string {
 		return "Excellent"
 	}
 	return "Unknown"
+}
+
+func wsHandler(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.WithError(err).Error("WebSocket Upgrade failed")
+		http.Error(w, fmt.Sprintf("WebSocket Upgrade failed %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	wsClients[ws] = true
+	log.WithField("Address", ws.RemoteAddr().String()).Info("Registered WebSocket client")
 }

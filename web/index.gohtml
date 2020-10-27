@@ -26,20 +26,33 @@
                 margin-bottom: 16px;
             }
             .messages {
-                height: 300px;
+                display: flex;
+                flex-direction: column;
+                padding: 16px;
+                background: #f5f5f5;
+                max-height: 500px;
                 overflow: scroll;
-            }
-            .messages div {
-                border-radius: 16px;
-            }
-            .messages .self {
-                background-color: #44b2dd;
-                text-align: right;
-            }
+                border-radius: 8px;
 
-            .messages .self {
-                background-color: #b8bbbc;
-                text-align: left;
+            }
+            .message {
+                background: #e9e9e9;
+                padding: 8px 16px;
+                max-width: 200px;
+                border-radius: 16px;
+                align-self: flex-start;
+            }
+            .message.self {
+                background: #008fbb;
+                color: #fff;
+                align-self: flex-end;
+            }
+            .message + .message {
+                margin-top: 8px;
+            }
+            .message:not(.self) + .message.self,
+            .message.self + .message:not(.self)  {
+                margin-top: 16px;
             }
 
         </style>
@@ -97,12 +110,12 @@
 
                     <hr>
                     <h3>Sms conversation</h3>
-                    <div class="card">
+                    <div id="vue-app">
                         <div class="messages">
-                            <div class="self">Hello</div>
-                            <div class="other">Nope</div>
-                            <div class="other">F off</div>
-                            <div class="self">Ok</div>
+                            <div v-for="message in messages" class="message" :class="{'self' : message.isSelf}">
+                                {%message.text%}
+                                <pre class="label label-default">{%message.number%}</pre>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -112,6 +125,25 @@
         <!-- <script src="js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script> -->
     </body>
     <script>
+        var app = new Vue({
+            el: '#vue-app',
+            delimiters: ['{%', '%}'],
+            data: {
+                messages: [
+                    // {"isSelf": false, text: "Hello"},
+                    // {"isSelf": true, text: "Hei"},
+                    // {"isSelf": true, text: "Sup?"},
+                    // {"isSelf": false, text: "Meh"}
+                ]
+            },
+            created() {
+                var smsSocket = new WebSocket("ws://{{.IP}}:{{.Port}}/ws")
+                smsSocket.onmessage = function (event) {
+                    let data = JSON.parse(event.data)
+                    app.messages.push({isSelf: false, text: data.text, number: `from: ${data.number}`})
+                }
+            }
+        });
 
         setInterval(function () {
             (async () => {
@@ -155,6 +187,7 @@
                 console.log(response)
 
                 document.getElementById("output").innerText = response.data;
+                app.messages.push({isSelf: true, text: payload.text, number: `to: ${payload.number}`})
             })();
         }
 

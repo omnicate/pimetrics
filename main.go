@@ -17,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -76,6 +77,8 @@ var (
 	configPath string
 
 	renderData RenderData
+
+	wsClients = make(map[*websocket.Conn]bool)
 )
 
 func registerMetrics() {
@@ -142,6 +145,8 @@ func main() {
 	mux.HandleFunc("/v2/signal_status", handleSignalStatus).Methods("GET")
 	mux.HandleFunc("/v2/provider", handleGetProvider).Methods("GET")
 	mux.HandleFunc("/v2/testrun/{target}", handleTestRun).Methods("GET")
+
+	mux.HandleFunc("/ws", wsHandler)
 
 	webServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", CurrentConfig.AppConfig.Port),

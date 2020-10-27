@@ -2,6 +2,7 @@ package pi_modem
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -73,4 +74,26 @@ func (g *PiModem) ReceiveMode() {
 		func(err error) {
 			log.WithError(err).Error("Failed receiving sms")
 		})
+}
+
+func (g *PiModem) HandleIncomingCall() {
+	g.AddIndication("RING", func(info []string) {
+		// Answer call
+		res, err := g.Command("A")
+		if err != nil {
+			log.WithError(err).Error("Failed answering call")
+		}
+		log.WithField("result", res).Info("Answered call")
+
+		for {
+			select {
+			case <-time.After(time.Second * 5):
+				res, err := g.Command("H")
+				if err != nil {
+					log.WithError(err).Error("Failed hangingup call")
+				}
+				log.WithField("result", res).Info("Hanged-up call")
+			}
+		}
+	})
 }
