@@ -157,7 +157,7 @@
                 console.log(response)
                 document.getElementById("providerStatus").innerText = "Provider: " + response.data;
             })();
-        },30 * 1000);
+        },10 * 1000);
 
         function send() {
             axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
