@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	modem "pimetrics/pkg/pi-modem"
@@ -129,7 +131,6 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, rsp)
 }
 
-
 func HandleSmsRecieveMode(w http.ResponseWriter, r *http.Request) {
 	handlerMutex.Lock()
 	defer handlerMutex.Unlock()
@@ -164,11 +165,11 @@ func handleSignalStatus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithField("signal_status", err)
 	} else {
-		squal := strings.Split(i[0]," ")
+		squal := strings.Split(i[0], " ")
 		if len(squal) == 2 {
-			fQual, _ := strconv.ParseFloat(strings.Replace(squal[1],",",".",1), 32)
+			fQual, _ := strconv.ParseFloat(strings.Replace(squal[1], ",", ".", 1), 32)
 			rQual := signalQualityReadable(int(fQual))
-			w.Write([]byte(fmt.Sprintf("%d (%s)",int(fQual),rQual)))
+			w.Write([]byte(fmt.Sprintf("%d (%s)", int(fQual), rQual)))
 		}
 	}
 }
@@ -178,9 +179,65 @@ func handleGetProvider(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithField("provider", err)
 	} else {
-		pString := strings.Split(i[0],",")[2]
+		pString := strings.Split(i[0], ",")[2]
 		w.Write([]byte(pString))
 	}
+}
+
+func handleTestRun(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	var tr TestResult
+	tr.Message = "Great SUCCESS!!!!"
+
+	if vars["target"] == "" {
+		tr.Error = errors.New("invalid request")
+		tr.Message = "Could not parse target"
+	}
+
+	if tconfig, ok := LabConfig[vars["target"]]; ok {
+		//Target config has been found, do something with it
+		handlerMutex.Lock()
+		defer handlerMutex.Unlock()
+
+		_, err := gModem.SendShortMessage(tconfig.Msisdn, "OMG_MAGIC_STUFF_!!_one_eleven_!!")
+		if err != nil {
+			tr.Error = errors.New("failed in SMS send operation")
+
+			tr.Operations = append(tr.Operations, TestOperation{
+				Type:    "SMSSend",
+				Success: false,
+				Error:   err,
+			})
+		} else {
+			tr.Operations = append(tr.Operations, TestOperation{
+				Type:    "SMSSend",
+				Success: true,
+				Error:   nil,
+			})
+		}
+
+	} else {
+		// We dont know that target, return error
+		tr.Error = errors.New("unknown target")
+		tr.Message = "Could not find target"
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	trj, _ := json.Marshal(tr)
+	w.Write(trj)
+}
+
+type TestResult struct {
+	Message    string          `json:"Message"`
+	Error      error           `json:"Error"`
+	Operations []TestOperation `json:"Operations"`
+}
+
+type TestOperation struct {
+	Type    string `json:"Type"`
+	Success bool   `json:"Success"`
+	Error   error  `json:"Error"`
 }
 
 func signalQualityReadable(iQual int) string {
