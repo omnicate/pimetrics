@@ -117,7 +117,7 @@
 
             console.log("Sending payload: ", payload);
             (async () => {
-                const response = await axios.post("http://{{.IP}}:8080/make_call", payload);
+                const response = await axios.post("http://192.168.1.48:8080/v2/call", payload);
                 console.log(response)
 
                 document.getElementById("output").innerText = response.data;

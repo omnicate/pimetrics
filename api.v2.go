@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	modem "pimetrics/pkg/pi-modem"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -77,4 +78,56 @@ func HandleSendCommandV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprint(w, output)
+}
+
+func HandleCall(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Only POST requests are valid", http.StatusBadRequest)
+		return
+	}
+
+	handlerMutex.Lock()
+	defer handlerMutex.Unlock()
+
+	var call modem.Call
+
+	err := json.NewDecoder(r.Body).Decode(&call)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"number": call.Number,
+	}).Info("Calling the following number")
+
+	rsp, err := gModem.Call(call.Number)
+	if err != nil {
+		log.WithError(err).Error("Call failed")
+		http.Error(w, fmt.Sprintf("Call failed with %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Go routine to hangup the call
+	go func() {
+		for {
+			select {
+			case <-time.After(time.Minute):
+				r, err := gModem.Handup()
+				if err != nil {
+					log.WithError(err).Error("Failed hanging up call")
+				}
+				log.WithField("response", r).Infof("Hanged up call with %s", call.Number)
+				return
+			}
+		}
+	}()
+
+	fmt.Fprint(w, rsp)
+}
+
+func registerApiV2() {
+	http.HandleFunc("/v2/send_sms", HandleSendSMSV2)
+	http.HandleFunc("/v2/send_command", HandleSendCommandV2)
+	http.HandleFunc("/v2/call", HandleCall)
 }
