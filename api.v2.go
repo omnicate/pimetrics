@@ -112,7 +112,7 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		for {
 			select {
-			case <-time.After(time.Minute):
+			case <-time.After(time.Second * 25):
 				r, err := gModem.Handup()
 				if err != nil {
 					log.WithError(err).Error("Failed hanging up call")
@@ -124,10 +124,4 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	fmt.Fprint(w, rsp)
-}
-
-func registerApiV2() {
-	http.HandleFunc("/v2/send_sms", HandleSendSMSV2)
-	http.HandleFunc("/v2/send_command", HandleSendCommandV2)
-	http.HandleFunc("/v2/call", HandleCall)
 }
