@@ -1,15 +1,23 @@
 ---
 pi3:
-  tenent: vimla
+  tenant: vimla
   msisdn: 46724430313 # DeviceLab7
   target: arm64
-  sw_version: 1.0.0
-  config: |
-    some_yaml: yaml
+  config:
+    modem:
+      baud: 9600
+      device: /dev/ttyUSB2
+      timeout: 1m
+    sw_version: 0.0.17
+    port: 8080
 pi4:
-  tenent: vimla
+  tenant: vimla
   msisdn: 46724424099 # DeviceLab6
   target: arm
-  sw_version: 0.0.17
-  config: |
-    some_yaml: yaml
+  config:
+    modem:
+      baud: 9600
+      device: /dev/ttyUSB2
+      timeout: 1m
+    sw_version: 0.0.17
+    port: 8080

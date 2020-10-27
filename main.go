@@ -1,11 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 
 	modem "pimetrics/pkg/pi-modem"
 
@@ -31,6 +31,8 @@ const (
    |/       \_______/  |/     \|(_______/   )_(   |/   \__/\_______/(_______/\_______)
 
 `
+
+	DEFAULT_CONFIG_PATH = "/home/ubuntu/config.yaml"
 )
 
 var (
@@ -63,6 +65,8 @@ var (
 	handlerMutex = &sync.Mutex{}
 
 	gModem *gsm.GSM
+
+	configPath string
 )
 
 func registerMetrics() {
@@ -84,6 +88,10 @@ func registerMetrics() {
 	if err := prometheus.Register(CallError); err != nil {
 		log.WithError(err).Error("Failed register CallError")
 	}
+}
+
+func readFlags() {
+	flag.StringVar(&configPath, "config-path", DEFAULT_CONFIG_PATH, "path to pimetrics config file")
 }
 
 func setUpStatus() {
@@ -128,14 +136,13 @@ func setUpStatus() {
 }
 
 func init() {
+	readFlags()
 	registerMetrics()
 
+	readConfig(configPath)
+
 	var err error
-	gModem, err = modem.InitModemV2(&modem.ModemConfig{
-		Baud:           9600,
-		Device:         "/dev/ttyUSB0",
-		DefaultTimeout: time.Minute,
-	}, []gsm.Option{})
+	gModem, err = modem.InitModemV2(&CurrentConfig.AppConfig.ModemConfig, []gsm.Option{})
 	if err != nil {
 		log.WithError(err).Error("Failed initialising modem with")
 	} else {
@@ -167,8 +174,8 @@ func main() {
 	registerV2Api()
 
 	log.WithFields(log.Fields{
-		"port": HTTP_PORT,
+		"port": CurrentConfig.AppConfig.Port,
 	}).Info("Listening on ")
 
-	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
+	http.ListenAndServe(fmt.Sprintf(":%d", CurrentConfig.AppConfig.Port), nil)
 }

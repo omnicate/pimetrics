@@ -3,9 +3,10 @@ package pi_modem
 import "time"
 
 type ModemConfig struct {
-	Baud           int
-	Device         string
-	DefaultTimeout time.Duration
+	Baud           int           `yaml:"baud"`
+	Device         string        `yaml:"device"`
+	DefaultTimeout time.Duration `yaml:"timeout,omitempty"`
+	InitCmd        string        `yaml:"init_command,omitempty"`
 }
 
 type SMS struct {

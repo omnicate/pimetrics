@@ -1,6 +1,7 @@
 package pi_modem
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/modem/at"
 	"github.com/warthog618/modem/gsm"
 	"github.com/warthog618/modem/serial"
@@ -8,6 +9,10 @@ import (
 )
 
 func InitModemV2(cfg *ModemConfig, opts []gsm.Option) (*gsm.GSM, error) {
+
+	log.WithFields(log.Fields{
+		"modem_config": cfg,
+	}).Info("Modem being initialised")
 
 	serial, err := serial.New(serial.WithPort(cfg.Device), serial.WithBaud(cfg.Baud))
 	if err != nil {
