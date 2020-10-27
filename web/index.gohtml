@@ -8,6 +8,7 @@
 
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="static/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
         <style>
             main.container {
                 margin-top: 50px;
@@ -24,6 +25,23 @@
             input, textarea {
                 margin-bottom: 16px;
             }
+            .messages {
+                height: 300px;
+                overflow: scroll;
+            }
+            .messages div {
+                border-radius: 16px;
+            }
+            .messages .self {
+                background-color: #44b2dd;
+                text-align: right;
+            }
+
+            .messages .self {
+                background-color: #b8bbbc;
+                text-align: left;
+            }
+
         </style>
     </head>
 
@@ -67,6 +85,17 @@
                     <div class="card">
                         <div class="card-body">
                             <pre id="output">Waiting...</pre>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h3>Sms conversation</h3>
+                    <div class="card">
+                        <div class="messages">
+                            <div class="self">Hello</div>
+                            <div class="other">Nope</div>
+                            <div class="other">F off</div>
+                            <div class="self">Ok</div>
                         </div>
                     </div>
                 </div>
