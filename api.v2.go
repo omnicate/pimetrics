@@ -78,8 +78,3 @@ func HandleSendCommandV2(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprint(w, output)
 }
-
-func registerApiV2() {
-	http.HandleFunc("/v2/send_sms", HandleSendSMSV2)
-	http.HandleFunc("/v2/send_command", HandleSendCommandV2)
-}

@@ -3,20 +3,22 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html/template"
+	"net"
 	"net/http"
-	"sync"
-
 	modem "pimetrics/pkg/pi-modem"
+	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/warthog618/modem/gsm"
 
 	prom "github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/gorilla/mux"
 )
 
 const (
-	HTTP_PORT        = 8080
 	METRICS_ENDPOINT = "/metrics"
 
 	HEADER = `
@@ -33,6 +35,10 @@ const (
 
 	DEFAULT_CONFIG_PATH = "/home/ubuntu/config.yaml"
 )
+
+type RenderData struct {
+	IP string
+}
 
 var (
 	isUpMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -66,6 +72,8 @@ var (
 	gModem *gsm.GSM
 
 	configPath string
+
+	renderData RenderData
 )
 
 func registerMetrics() {
@@ -91,6 +99,8 @@ func registerMetrics() {
 
 func readFlags() {
 	flag.StringVar(&configPath, "config-path", DEFAULT_CONFIG_PATH, "path to pimetrics config file")
+
+	flag.Parse()
 }
 
 func init() {
@@ -113,15 +123,54 @@ func init() {
 func main() {
 	log.Infoln(HEADER)
 
-	fs := http.FileServer(http.Dir("./static"))
-	http.Handle("/", fs)
-	http.Handle(METRICS_ENDPOINT, prom.Handler())
+	fs := http.FileServer(http.Dir("./web/static"))
 
-	registerApiV2()
+	mux := mux.NewRouter()
+	mux.HandleFunc("/", handleIndex).Methods("GET")
+	mux.PathPrefix("/static/").Handler(http.StripPrefix("/static/",fs)).Methods("GET")
+	mux.Handle(METRICS_ENDPOINT, prom.Handler()).Methods("GET")
+	mux.HandleFunc("/v2/send_sms", HandleSendSMSV2).Methods("POST")
+	mux.HandleFunc("/v2/send_command", HandleSendCommandV2).Methods("POST")
 
-	log.WithFields(log.Fields{
-		"port": CurrentConfig.AppConfig.Port,
-	}).Info("Listening on ")
+	webServer := &http.Server{
+		Addr:    fmt.Sprintf(":%d", CurrentConfig.AppConfig.Port),
+		Handler: mux,
+	}
 
-	http.ListenAndServe(fmt.Sprintf(":%d", CurrentConfig.AppConfig.Port), nil)
+	renderData.IP = getOwnIP()
+
+	log.Info("Starting web Server now")
+	err := webServer.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		log.Error(err, "Could not start web server")
+	}
+}
+
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	err := template.Must(template.ParseFiles("web/index.gohtml")).Execute(w, renderData)
+	if err != nil {
+		log.Error(err)
+	}
+}
+
+func getOwnIP() string {
+	ifaces, _ := net.Interfaces()
+
+	for _, i := range ifaces {
+		addrs, _ := i.Addrs()
+
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				if !v.IP.IsLoopback() {
+					return v.IP.String()
+				}
+			case *net.IPAddr:
+				if !v.IP.IsLoopback() {
+					return v.IP.String()
+				}
+			}
+		}
+	}
+	return ""
 }
