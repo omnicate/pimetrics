@@ -40,7 +40,10 @@ func InitModem(cfg *ModemConfig, opts []gsm.Option) (*PiModem, error) {
 	if err = modem.Init(); err != nil {
 		return nil, err
 	}
+
 	modem.ReceiveMode()
+	modem.HandleIncomingCall()
+
 	return modem, nil
 }
 
@@ -54,7 +57,7 @@ func (g *PiModem) Call(number string, options ...at.CommandOption) (rsp []string
 	return r, nil
 }
 
-func (g *PiModem) Handup() (rsp []string, err error) {
+func (g *PiModem) Hangup() (rsp []string, err error) {
 	cmd := "H" + MODEM_BREAK
 	r, err := g.Command(cmd, []at.CommandOption{}...)
 	if err != nil {
@@ -93,7 +96,15 @@ func (g *PiModem) HandleIncomingCall() {
 					log.WithError(err).Error("Failed hangingup call")
 				}
 				log.WithField("result", res).Info("Hanged-up call")
+				return
 			}
 		}
 	})
+}
+
+func (g *PiModem) SendSMS(number string, message string, options ...at.CommandOption) (rsp string, err error) {
+
+	rsp, err = g.SendShortMessage(number, message, options...)
+
+	return rsp, err
 }

@@ -50,7 +50,7 @@ func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
 		"text":   sms.Text,
 	}).Info("Sending sms with the following details")
 
-	res, err := gModem.SendShortMessage(sms.Number, sms.Text)
+	res, err := gModem.SendSMS(sms.Number, sms.Text)
 
 	if err != nil {
 		log.WithError(err).Error("SendSMS failed")
@@ -127,8 +127,8 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		for {
 			select {
-			case <-time.After(time.Second * 25):
-				r, err := gModem.Handup()
+			case <-time.After(time.Second * 30):
+				r, err := gModem.Hangup()
 				if err != nil {
 					log.WithError(err).Error("Failed hanging up call")
 				}
@@ -184,6 +184,9 @@ func HandleSmsStopReceiveMode(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleSignalStatus(w http.ResponseWriter, r *http.Request) {
+	handlerMutex.Lock()
+	defer handlerMutex.Unlock()
+
 	i, err := gModem.Command("+CSQ")
 	if err != nil {
 		log.WithField("signal_status", err)
@@ -198,6 +201,9 @@ func handleSignalStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetProvider(w http.ResponseWriter, r *http.Request) {
+	handlerMutex.Lock()
+	defer handlerMutex.Unlock()
+
 	i, err := gModem.Command("+COPS?")
 	if err != nil {
 		log.WithField("provider", err)
@@ -230,7 +236,7 @@ func handleTestRun(w http.ResponseWriter, r *http.Request) {
 		defer handlerMutex.Unlock()
 
 		// Send SMS with magic content
-		_, err := gModem.SendShortMessage(tconfig.Msisdn, "OMG_MAGIC_STUFF_!!_one_eleven_!!!")
+		_, err := gModem.SendSMS(tconfig.Msisdn, "OMG_MAGIC_STUFF_!!_one_eleven_!!!")
 		if err != nil {
 			tr.Error = errors.New("failed in SMS send operation")
 
