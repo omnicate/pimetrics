@@ -71,7 +71,7 @@ var (
 
 	handlerMutex = &sync.Mutex{}
 
-	gModem *gsm.GSM
+	gModem *modem.PiModem
 
 	configPath string
 

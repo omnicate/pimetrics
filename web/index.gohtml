@@ -115,6 +115,7 @@
 
             console.log("Sending payload: ", payload);
             (async () => {
+
                 const response = await axios.post("http://{{.IP}}:{{.Port}}/make_call", payload);
                 console.log(response)
 
