@@ -5,7 +5,11 @@ import (
 	"github.com/warthog618/modem/at"
 	"github.com/warthog618/modem/gsm"
 	"github.com/warthog618/modem/serial"
-	"github.com/warthog618/modem/trace"
+)
+
+const (
+	CTRL_Z    = string(26)
+	BREAKLINE = string(13)
 )
 
 func InitModemV2(cfg *ModemConfig, opts []gsm.Option) (*gsm.GSM, error) {
@@ -19,7 +23,8 @@ func InitModemV2(cfg *ModemConfig, opts []gsm.Option) (*gsm.GSM, error) {
 		return nil, err
 	}
 
-	modem := gsm.New(at.New(trace.New(serial), at.WithTimeout(cfg.DefaultTimeout)), opts...)
+	// modem := gsm.New(at.New(trace.New(serial), at.WithTimeout(cfg.DefaultTimeout)), opts...)
+	modem := gsm.New(at.New(serial, at.WithTimeout(cfg.DefaultTimeout)), opts...)
 	if err = modem.Init(); err != nil {
 		return nil, err
 	}

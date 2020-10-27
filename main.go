@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 
 	modem "pimetrics/pkg/pi-modem"
@@ -94,47 +93,6 @@ func readFlags() {
 	flag.StringVar(&configPath, "config-path", DEFAULT_CONFIG_PATH, "path to pimetrics config file")
 }
 
-func setUpStatus() {
-	handlerMutex.Lock()
-	defer handlerMutex.Unlock()
-
-	roamingCmd := "AT+CGREG?" + modem.BREAKLINE
-	networkCmd := "AT+COPS?" + modem.BREAKLINE
-
-	isRoaming := "0"
-	network := ""
-
-	output, err := modem.SendCommand(roamingCmd)
-	if err != nil {
-		log.WithError(err).Errorf("SendCommand %s failed", roamingCmd)
-	} else {
-		log.WithFields(log.Fields{
-			"command": roamingCmd,
-			"output":  output,
-		}).Info("Roaming command output")
-		if strings.Contains(output, "0,5") {
-			isRoaming = "1"
-		}
-	}
-
-	output, err = modem.SendCommand(networkCmd)
-	if err != nil {
-		log.WithError(err).Errorf("SendCommand %s failed", networkCmd)
-	} else {
-		log.WithFields(log.Fields{
-			"command": networkCmd,
-			"output":  output,
-		}).Info("Roaming command output")
-
-		// example output: "T+COPS?\r\r\n+COPS: 0,0,\"N Telenor LOLTEL\",2\r\n\r\nOK\r\n"
-		network = strings.Split(output, "\"")[1]
-	}
-
-	isUpMetric.With(prometheus.Labels{
-		"roaming": isRoaming,
-		"network": network}).Inc()
-}
-
 func init() {
 	readFlags()
 	registerMetrics()
@@ -142,25 +100,14 @@ func init() {
 	readConfig(configPath)
 
 	var err error
-	gModem, err = modem.InitModemV2(&CurrentConfig.AppConfig.ModemConfig, []gsm.Option{})
+	gModem, err = modem.InitModemV2(&CurrentConfig.AppConfig.ModemConfig,
+		[]gsm.Option{})
 	if err != nil {
 		log.WithError(err).Error("Failed initialising modem with")
 	} else {
 		isModemInitialised.Inc()
 		log.Info("Successfully initialised modem")
 	}
-	// if !modem.ModemInitialized() {
-	// 	if err := modem.InitModem(); err != nil {
-	// 		log.WithError(err).Error("Failed initialising modem with")
-	// 	} else {
-	// 		isModemInitialised.Inc()
-	// 		log.Info("Successfully initialised modem")
-	// 	}
-	// } else {
-	// 	isModemInitialised.Inc()
-	// }
-
-	//setUpStatus()
 }
 
 func main() {
@@ -170,8 +117,7 @@ func main() {
 	http.Handle("/", fs)
 	http.Handle(METRICS_ENDPOINT, prom.Handler())
 
-	registerApiV1()
-	registerV2Api()
+	registerApiV2()
 
 	log.WithFields(log.Fields{
 		"port": CurrentConfig.AppConfig.Port,

@@ -68,7 +68,7 @@ func HandleSendCommandV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// output, err := modem.SendCommand(string(cmd) + modem.BREAKLINE + modem.CTRL_Z)
-	output, err := gModem.Command(string(cmd), []at.CommandOption{}...)
+	output, err := gModem.Command(string(cmd)+modem.BREAKLINE+modem.CTRL_Z, []at.CommandOption{}...)
 	if err != nil {
 		log.WithError(err).Error("SendCommand failed")
 		http.Error(w, fmt.Sprintf("SendCommand failed with %v", err),
@@ -79,7 +79,7 @@ func HandleSendCommandV2(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, output)
 }
 
-func registerV2Api() {
+func registerApiV2() {
 	http.HandleFunc("/v2/send_sms", HandleSendSMSV2)
 	http.HandleFunc("/v2/send_command", HandleSendCommandV2)
 }
