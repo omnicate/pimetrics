@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	modem "pimetrics/pkg/pi-modem"
+	"strconv"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -37,7 +38,8 @@ const (
 )
 
 type RenderData struct {
-	IP string
+	IP   string
+	Port uint
 }
 
 var (
@@ -109,6 +111,9 @@ func init() {
 
 	readConfig(configPath)
 
+	renderData.IP = getOwnIP()
+	renderData.Port = CurrentConfig.AppConfig.Port
+
 	var err error
 	gModem, err = modem.InitModemV2(&CurrentConfig.AppConfig.ModemConfig,
 		[]gsm.Option{})
@@ -127,7 +132,7 @@ func main() {
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", handleIndex).Methods("GET")
-	mux.PathPrefix("/static/").Handler(http.StripPrefix("/static/",fs)).Methods("GET")
+	mux.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs)).Methods("GET")
 	mux.Handle(METRICS_ENDPOINT, prom.Handler()).Methods("GET")
 	mux.HandleFunc("/v2/send_sms", HandleSendSMSV2).Methods("POST")
 	mux.HandleFunc("/v2/send_command", HandleSendCommandV2).Methods("POST")
@@ -137,9 +142,7 @@ func main() {
 		Handler: mux,
 	}
 
-	renderData.IP = getOwnIP()
-
-	log.Info("Starting web Server now")
+	log.Info("Starting web Server now on " + renderData.IP + ":" + strconv.Itoa(int(renderData.Port)))
 	err := webServer.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		log.Error(err, "Could not start web server")
@@ -159,15 +162,10 @@ func getOwnIP() string {
 	for _, i := range ifaces {
 		addrs, _ := i.Addrs()
 
-		for _, addr := range addrs {
-			switch v := addr.(type) {
-			case *net.IPNet:
-				if !v.IP.IsLoopback() {
-					return v.IP.String()
-				}
-			case *net.IPAddr:
-				if !v.IP.IsLoopback() {
-					return v.IP.String()
+		for _, a := range addrs {
+			if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet.IP.To4() != nil {
+					return ipnet.IP.String()
 				}
 			}
 		}

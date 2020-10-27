@@ -30,7 +30,7 @@ type Config struct {
 
 type AppConfig struct {
 	SwVersion   string            `yaml:"sw_version"`
-	Port        uint              `yaml:"port,omitempty"`
+	Port        uint            `yaml:"port,omitempty"`
 	ModemConfig modem.ModemConfig `yaml:"modem"`
 }
 
