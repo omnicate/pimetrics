@@ -4,9 +4,6 @@ function update {
   VERSION=$1
   PI_ARCH=$2
 
-  echo Stopping pimetrics
-  systemctl stop pimetrics
-
   echo Downloading new version
   wget https://github.com/omnicate/pimetrics/releases/download/v$VERSION/pimetrics-v$VERSION.linux-$PI_ARCH.tar.gz
 
@@ -14,8 +11,6 @@ function update {
   tar -xvzf pimetrics-v$VERSION.linux-$PI_ARCH.tar.gz ./
   rm pimetrics-v$VERSION.linux-$PI_ARCH.tar.gz
 
-  echo Starting pimetrics
-  systemctl start pimetrics
 }
 
 
@@ -40,13 +35,14 @@ DIFF_RESULT=$?
 if [ $DIFF_RESULT ]; then
   # Something changed, update all configs and restart
   echo Config has changed
-  # Write new pimetrics config into updater folder
-  yq read ./updater/config.yaml $PI_NAME.config > ./pimetrics-config.yaml
 
-  OLD_VERSION=`yq read ./config.yaml $PI_NAME.sw_version`
-  NEW_VERSION=`yq read ./updater/config.yaml $PI_NAME.sw_version`
+  echo Stopping pimetrics
+  sudo systemctl stop pimetrics
 
-  if [ ! $OLD_VERSION == $NEW_VERSION ]; then
+  OLD_VERSION=`yq read ./config.yaml $PI_NAME.config.sw_version`
+  NEW_VERSION=`yq read ./updater/config.yaml $PI_NAME.config.sw_version`
+
+  if [ ! "$OLD_VERSION" == "$NEW_VERSION" ]; then
     echo Updating to $NEW_VERSION
     CONFIG_ARCH=`yq read ./updater/config.yaml $PI_NAME.target`
     update $NEW_VERSION $CONFIG_ARCH
@@ -55,6 +51,9 @@ if [ $DIFF_RESULT ]; then
 
   # Copy new config to old location
   cp ./updater/config.yaml ./config.yaml
+
+  echo Starting pimetrics
+  sudo systemctl start pimetrics
 fi
 
 # Clean up
