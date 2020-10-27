@@ -46,6 +46,8 @@
                         </div>
                         <textarea id="msg" class="form-control" placeholder="Message"></textarea>
                         <button type="button" onclick="sendSMS()" class="btn btn-primary">Send SMS</button>
+                        <button type="button" onclick="smsReceiveMode()" class="btn btn-primary">SMS Receive</button>
+                        <button type="button" onclick="stopSmsReceiveMode()" class="btn btn-primary">Stop SMS Receive</button>
                     </form>
                     <hr>
                     <h3>Make Call</h3>
@@ -100,6 +102,24 @@
             console.log("Sending payload: ", payload);
             (async () => {
                 const response = await axios.post("http://{{.IP}}:{{.Port}}/v2/send_sms", payload);
+                console.log(response)
+
+                document.getElementById("output").innerText = response.data;
+            })();
+        }
+
+        function smsReceiveMode() {
+            (async () => {
+                const response = await axios.post("http://{{.IP}}:{{.Port}}/v2/sms_receive");
+                console.log(response)
+
+                document.getElementById("output").innerText = response.data;
+            })();
+        }
+
+        function stopSmsReceiveMode() {
+            (async () => {
+                const response = await axios.post("http://{{.IP}}:{{.Port}}/v2/stop_sms_receive");
                 console.log(response)
 
                 document.getElementById("output").innerText = response.data;

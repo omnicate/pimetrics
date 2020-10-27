@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/modem/at"
+	"github.com/warthog618/modem/gsm"
 )
 
 func HandleSendSMSV2(w http.ResponseWriter, r *http.Request) {
@@ -124,4 +125,33 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	fmt.Fprint(w, rsp)
+}
+
+func HandleSmsRecieveMode(w http.ResponseWriter, r *http.Request) {
+	handlerMutex.Lock()
+	defer handlerMutex.Unlock()
+
+	err := gModem.StartMessageRx(
+		func(msg gsm.Message) {
+			log.WithField("message", msg.Message).Infof("Recieved SMS from %s", msg.Number)
+		},
+		func(err error) {
+			log.WithError(err).Error("Failed reciving sms")
+		})
+	if err != nil {
+		log.WithError(err).Error("StartMessageRx failed")
+	}
+
+	log.Info("Waiting for SMS")
+	fmt.Fprint(w, "Waiting for SMS")
+}
+
+func HandleSmsStopRecieveMode(w http.ResponseWriter, r *http.Request) {
+	handlerMutex.Lock()
+	defer handlerMutex.Unlock()
+
+	gModem.StopMessageRx()
+
+	log.Info("Stopped waiting for SMS")
+	fmt.Fprint(w, "Stopped waiting for SMS")
 }

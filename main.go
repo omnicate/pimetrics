@@ -137,6 +137,8 @@ func main() {
 	mux.HandleFunc("/v2/send_sms", HandleSendSMSV2).Methods("POST")
 	mux.HandleFunc("/v2/send_command", HandleSendCommandV2).Methods("POST")
 	mux.HandleFunc("/v2/call", HandleCall).Methods("POST")
+	mux.HandleFunc("/v2/sms_receive", HandleSmsRecieveMode).Methods("POST")
+	mux.HandleFunc("/v2/stop_sms_receive", HandleSmsStopRecieveMode).Methods("POST")
 
 	webServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", CurrentConfig.AppConfig.Port),
