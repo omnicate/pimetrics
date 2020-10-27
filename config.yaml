@@ -8,16 +8,16 @@ pi3:
       baud: 9600
       device: /dev/ttyUSB2
       timeout: 1m
-    sw_version: 0.0.17
+    sw_version: 0.0.18
     port: 8080
 pi4:
   tenant: vimla
   msisdn: 46724424099 # DeviceLab6
-  target: arm
+  target: arm64
   config:
     modem:
       baud: 9600
       device: /dev/ttyUSB2
       timeout: 1m
-    sw_version: 0.0.17
+    sw_version: 0.0.18
     port: 8080
