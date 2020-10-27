@@ -174,12 +174,12 @@ func handleSignalStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGetProvider(w http.ResponseWriter, r *http.Request) {
-	i, err := gModem.Command("+CSPN")
+	i, err := gModem.Command("+COPS?")
 	if err != nil {
 		log.WithField("provider", err)
 	} else {
-		squal := strings.Split(i[0]," ")
-		w.Write([]byte(squal[1]))
+		pString := strings.Split(i[0],",")[2]
+		w.Write([]byte(pString))
 	}
 }
 
