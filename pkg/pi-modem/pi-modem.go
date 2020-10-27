@@ -33,14 +33,13 @@ func InitModem(cfg *ModemConfig, opts []gsm.Option) (*PiModem, error) {
 		return nil, err
 	}
 
-	// modem := gsm.New(at.New(trace.New(serial), at.WithTimeout(cfg.DefaultTimeout)), opts...)
 	modem := &PiModem{
 		gsm.New(at.New(serial, at.WithTimeout(cfg.DefaultTimeout)), opts...),
 	}
 	if err = modem.Init(); err != nil {
 		return nil, err
 	}
-
+	modem.ReceiveMode()
 	return modem, nil
 }
 
@@ -61,4 +60,17 @@ func (g *PiModem) Handup() (rsp []string, err error) {
 		return nil, errors.Wrap(err, "Failed hanging up call")
 	}
 	return r, nil
+}
+
+func (g *PiModem) ReceiveMode() {
+	_ = g.StartMessageRx(
+		func(msg gsm.Message) {
+			log.WithField("message", msg.Message).Infof("Received SMS from %s", msg.Number)
+			if msg.Message == "OMG_MAGIC_STUFF_!!_one_eleven_!!!" {
+				_, _ = g.SendShortMessage(msg.Number, "NO_MAGIC_JUST_TURTLES")
+			}
+		},
+		func(err error) {
+			log.WithError(err).Error("Failed receiving sms")
+		})
 }

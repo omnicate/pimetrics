@@ -179,8 +179,14 @@ func handleGetProvider(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithField("provider", err)
 	} else {
-		pString := strings.Split(i[0], ",")[2]
-		w.Write([]byte(pString))
+		retCmd := strings.Split(i[0], ",")
+		if len(retCmd) >= 2 {
+			pString := strings.Split(i[0], ",")[2]
+			w.Write([]byte(pString))
+		} else {
+			w.Write([]byte("Unknown"))
+		}
+
 	}
 }
 
@@ -200,7 +206,8 @@ func handleTestRun(w http.ResponseWriter, r *http.Request) {
 		handlerMutex.Lock()
 		defer handlerMutex.Unlock()
 
-		_, err := gModem.SendShortMessage(tconfig.Msisdn, "OMG_MAGIC_STUFF_!!_one_eleven_!!")
+		// Send SMS with magic content
+		_, err := gModem.SendShortMessage(tconfig.Msisdn, "OMG_MAGIC_STUFF_!!_one_eleven_!!!")
 		if err != nil {
 			tr.Error = errors.New("failed in SMS send operation")
 
@@ -214,6 +221,48 @@ func handleTestRun(w http.ResponseWriter, r *http.Request) {
 				Type:    "SMSSend",
 				Success: true,
 				Error:   nil,
+			})
+		}
+
+		// Reset receive mode because we need different MessageHandler functions
+		gModem.StopMessageRx()
+
+		// Now Wait for SMS returning
+		_ = gModem.StartMessageRx(
+			func(msg gsm.Message) {
+				log.WithField("message", msg.Message).Infof("Received SMS from %s", msg.Number)
+				if msg.Message == "NO_MAGIC_JUST_TURTLES" {
+					tr.Operations = append(tr.Operations, TestOperation{
+						Type:    "SMSReceive",
+						Success: true,
+						Error:   nil,
+					})
+				} else {
+					tr.Operations = append(tr.Operations, TestOperation{
+						Type:    "SMSReceive",
+						Success: false,
+						Error:   errors.New("no return SMS received"),
+					})
+				}
+			},
+			func(err error) {
+				log.WithError(err).Error("Failed receiving sms")
+			})
+
+		// Sleep for 5 seconds to limit how long we are listening on SMS
+		time.Sleep(5 * time.Duration(time.Second))
+
+		gModem.StopMessageRx()
+
+		// Start standard receive mode again
+		gModem.ReceiveMode()
+
+		// if no messages have been received the length of TestOperations will be less than 2, write error
+		if len(tr.Operations) < 2 {
+			tr.Operations = append(tr.Operations, TestOperation{
+				Type:    "SMSReceive",
+				Success: false,
+				Error:   errors.New("no return SMS received"),
 			})
 		}
 
