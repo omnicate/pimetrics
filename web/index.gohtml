@@ -81,6 +81,13 @@
                     </form>
                 </div>
                 <div class="col">
+                    <h3>Status</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <pre id="signalStatus">Signal Quality: Unknown</pre>
+                            <pre id="providerStatus">Provider: Unknown</pre>
+                        </div>
+                    </div>
                     <h3>Output</h3>
                     <div class="card">
                         <div class="card-body">
@@ -105,6 +112,20 @@
         <!-- <script src="js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script> -->
     </body>
     <script>
+
+        setInterval(function () {
+            (async () => {
+                const response = await axios.get("http://{{.IP}}:{{.Port}}/v2/signal_status");
+                console.log(response)
+                document.getElementById("signalStatus").innerText = "Signal Quality: " + response.data;
+            })();
+
+            (async () => {
+                const response = await axios.get("http://{{.IP}}:{{.Port}}/v2/provider");
+                console.log(response)
+                document.getElementById("providerStatus").innerText = "Provider: " + response.data;
+            })();
+        },2000);
 
         function send() {
             axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';

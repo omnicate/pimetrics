@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	modem "pimetrics/pkg/pi-modem"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -127,6 +129,7 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, rsp)
 }
 
+
 func HandleSmsRecieveMode(w http.ResponseWriter, r *http.Request) {
 	handlerMutex.Lock()
 	defer handlerMutex.Unlock()
@@ -154,4 +157,44 @@ func HandleSmsStopRecieveMode(w http.ResponseWriter, r *http.Request) {
 
 	log.Info("Stopped waiting for SMS")
 	fmt.Fprint(w, "Stopped waiting for SMS")
+}
+
+func handleSignalStatus(w http.ResponseWriter, r *http.Request) {
+	i, err := gModem.Command("+CSQ")
+	if err != nil {
+		log.WithField("signal_status", err)
+	} else {
+		squal := strings.Split(i[0]," ")
+		if len(squal) == 2 {
+			fQual, _ := strconv.ParseFloat(strings.Replace(squal[1],",",".",1), 32)
+			rQual := signalQualityReadable(int(fQual))
+			w.Write([]byte(fmt.Sprintf("%d (%s)",int(fQual),rQual)))
+		}
+	}
+}
+
+func handleGetProvider(w http.ResponseWriter, r *http.Request) {
+	i, err := gModem.Command("+CSPN")
+	if err != nil {
+		log.WithField("provider", err)
+	} else {
+		squal := strings.Split(i[0]," ")
+		w.Write([]byte(squal[1]))
+	}
+}
+
+func signalQualityReadable(iQual int) string {
+	if iQual >= 2 && iQual <= 9 {
+		return "Marginal"
+	}
+	if iQual >= 10 && iQual <= 14 {
+		return "OK"
+	}
+	if iQual >= 15 && iQual <= 19 {
+		return "Good"
+	}
+	if iQual >= 20 && iQual <= 30 {
+		return "Excellent"
+	}
+	return "Unknown"
 }
