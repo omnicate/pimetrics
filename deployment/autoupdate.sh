@@ -26,7 +26,7 @@ mkdir updater
 
 # Download config from github
 echo Downloading config from github
-wget -q https://raw.githubusercontent.com/omnicate/pimetrics/master/config.yaml -O ./updater/config.yaml
+wget --no-cache -q https://raw.githubusercontent.com/omnicate/pimetrics/master/config.yaml -O ./updater/config.yaml
 
 #Compare two configs
 echo Comparing Configs
