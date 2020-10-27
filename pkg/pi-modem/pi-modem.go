@@ -22,7 +22,7 @@ type PiModem struct {
 	*gsm.GSM
 }
 
-func InitModemV2(cfg *ModemConfig, opts []gsm.Option) (*PiModem, error) {
+func InitModem(cfg *ModemConfig, opts []gsm.Option) (*PiModem, error) {
 
 	log.WithFields(log.Fields{
 		"modem_config": cfg,

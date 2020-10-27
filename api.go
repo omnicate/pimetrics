@@ -18,7 +18,7 @@ import (
 	"github.com/warthog618/modem/gsm"
 )
 
-func HandleSendSMSV2(w http.ResponseWriter, r *http.Request) {
+func HandleSendSMS(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Only POST requests are valid", http.StatusBadRequest)
 		return
@@ -55,7 +55,7 @@ func HandleSendSMSV2(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, res)
 }
 
-func HandleSendCommandV2(w http.ResponseWriter, r *http.Request) {
+func HandleSendCommand(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Only POST requests are valid", http.StatusBadRequest)
 		return
@@ -131,7 +131,7 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, rsp)
 }
 
-func HandleSmsRecieveMode(w http.ResponseWriter, r *http.Request) {
+func HandleSmsReceiveMode(w http.ResponseWriter, r *http.Request) {
 	handlerMutex.Lock()
 	defer handlerMutex.Unlock()
 
@@ -150,7 +150,7 @@ func HandleSmsRecieveMode(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Waiting for SMS")
 }
 
-func HandleSmsStopRecieveMode(w http.ResponseWriter, r *http.Request) {
+func HandleSmsStopReceiveMode(w http.ResponseWriter, r *http.Request) {
 	handlerMutex.Lock()
 	defer handlerMutex.Unlock()
 

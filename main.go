@@ -115,7 +115,7 @@ func init() {
 	renderData.Port = CurrentConfig.AppConfig.Port
 
 	var err error
-	gModem, err = modem.InitModemV2(&CurrentConfig.AppConfig.ModemConfig,
+	gModem, err = modem.InitModem(&CurrentConfig.AppConfig.ModemConfig,
 		[]gsm.Option{})
 	if err != nil {
 		log.WithError(err).Error("Failed initialising modem with")
@@ -134,11 +134,11 @@ func main() {
 	mux.HandleFunc("/", handleIndex).Methods("GET")
 	mux.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs)).Methods("GET")
 	mux.Handle(METRICS_ENDPOINT, prom.Handler()).Methods("GET")
-	mux.HandleFunc("/v2/send_sms", HandleSendSMSV2).Methods("POST")
-	mux.HandleFunc("/v2/send_command", HandleSendCommandV2).Methods("POST")
+	mux.HandleFunc("/v2/send_sms", HandleSendSMS).Methods("POST")
+	mux.HandleFunc("/v2/send_command", HandleSendCommand).Methods("POST")
 	mux.HandleFunc("/v2/call", HandleCall).Methods("POST")
-	mux.HandleFunc("/v2/sms_receive", HandleSmsRecieveMode).Methods("POST")
-	mux.HandleFunc("/v2/stop_sms_receive", HandleSmsStopRecieveMode).Methods("POST")
+	mux.HandleFunc("/v2/sms_receive", HandleSmsReceiveMode).Methods("POST")
+	mux.HandleFunc("/v2/stop_sms_receive", HandleSmsStopReceiveMode).Methods("POST")
 	mux.HandleFunc("/v2/signal_status", handleSignalStatus).Methods("GET")
 	mux.HandleFunc("/v2/provider", handleGetProvider).Methods("GET")
 	mux.HandleFunc("/v2/testrun/{target}", handleTestRun).Methods("GET")
