@@ -22,21 +22,15 @@ const (
 
 var (
 	wsClients map[*websocket.Conn]bool
+	modemCfg  *ModemConfig
 )
 
 type PiModem struct {
 	*gsm.GSM
 }
 
-func InitModem(
-	clients map[*websocket.Conn]bool,
-	cfg *ModemConfig,
+func reinit(cfg *ModemConfig,
 	opts []gsm.Option) (*PiModem, error) {
-
-	log.WithFields(log.Fields{
-		"modem_config": cfg,
-	}).Info("Modem being initialised")
-
 	serial, err := serial.New(serial.WithPort(cfg.Device), serial.WithBaud(cfg.Baud))
 	if err != nil {
 		return nil, err
@@ -49,12 +43,31 @@ func InitModem(
 		return nil, err
 	}
 
-	wsClients = clients
-
 	modem.ReceiveMode()
 	modem.HandleIncomingCall()
 	modem.HandleNoCarrier()
 
+	log.Info("Reinit successful")
+
+	return modem, nil
+}
+
+func InitModem(
+	clients map[*websocket.Conn]bool,
+	cfg *ModemConfig,
+	opts []gsm.Option) (*PiModem, error) {
+
+	log.WithFields(log.Fields{
+		"modem_config": cfg,
+	}).Info("Modem being initialised")
+
+	modem, err := reinit(cfg, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	modemCfg = cfg
+	wsClients = clients
 	return modem, nil
 }
 
@@ -72,6 +85,12 @@ func (g *PiModem) Hangup() (rsp []string, err error) {
 	cmd := "H0" + MODEM_BREAK
 	r, err := g.Command(cmd, []at.CommandOption{}...)
 	if err != nil {
+
+		g, err = reinit(modemCfg, []gsm.Option{})
+		if err != nil {
+			log.WithError(err).Error("Failed reinit modem")
+		}
+
 		return nil, errors.Wrap(err, "Failed hanging up call")
 	}
 	return r, nil
@@ -116,6 +135,10 @@ func (g *PiModem) HandleIncomingCall() {
 				res, err := g.Command("H0")
 				if err != nil {
 					log.WithError(err).Error("Failed hangingup call")
+					g, err = reinit(modemCfg, []gsm.Option{})
+					if err != nil {
+						log.WithError(err).Error("Failed reinit modem")
+					}
 				}
 				log.WithField("result", res).Info("Hanged-up call")
 				return
