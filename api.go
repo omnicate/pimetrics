@@ -131,6 +131,7 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 				r, err := gModem.Hangup()
 				if err != nil {
 					log.WithError(err).Error("Failed hanging up call")
+					return
 				}
 				log.WithField("response", r).Infof("Hanged up call with %s", call.Number)
 				return

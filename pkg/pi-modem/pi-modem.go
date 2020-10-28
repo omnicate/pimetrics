@@ -82,14 +82,14 @@ func (g *PiModem) Call(number string, options ...at.CommandOption) (rsp []string
 }
 
 func (g *PiModem) Hangup() (rsp []string, err error) {
-	cmd := "H0" + MODEM_BREAK
+	cmd := "+CHUP" + MODEM_BREAK
 	r, err := g.Command(cmd, []at.CommandOption{}...)
 	if err != nil {
 
-		g, err = reinit(modemCfg, []gsm.Option{})
-		if err != nil {
-			log.WithError(err).Error("Failed reinit modem")
-		}
+		// g, err = reinit(modemCfg, []gsm.Option{})
+		// if err != nil {
+		// 	log.WithError(err).Error("Failed reinit modem")
+		// }
 
 		return nil, errors.Wrap(err, "Failed hanging up call")
 	}
@@ -100,9 +100,6 @@ func (g *PiModem) ReceiveMode() {
 	_ = g.StartMessageRx(
 		func(msg gsm.Message) {
 			log.WithField("message", msg.Message).Infof("Received SMS from %s", msg.Number)
-			if msg.Message == "OMG_MAGIC_STUFF_!!_one_eleven_!!!" {
-				_, _ = g.SendShortMessage(msg.Number, "NO_MAGIC_JUST_TURTLES")
-			}
 			for client := range wsClients {
 				err := client.WriteJSON(SMS{
 					Text:   msg.Message,
@@ -113,6 +110,10 @@ func (g *PiModem) ReceiveMode() {
 					client.Close()
 					delete(wsClients, client)
 				}
+			}
+
+			if msg.Message == "OMG_MAGIC_STUFF_!!_one_eleven_!!!" {
+				_, _ = g.SendShortMessage(msg.Number, "NO_MAGIC_JUST_TURTLES")
 			}
 		},
 		func(err error) {
@@ -132,7 +133,7 @@ func (g *PiModem) HandleIncomingCall() {
 		for {
 			select {
 			case <-time.After(time.Second * 5):
-				res, err := g.Command("H0")
+				res, err := g.Command("H")
 				if err != nil {
 					log.WithError(err).Error("Failed hangingup call")
 					g, err = reinit(modemCfg, []gsm.Option{})
