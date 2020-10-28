@@ -127,7 +127,7 @@ func HandleCall(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		for {
 			select {
-			case <-time.After(time.Second * 30):
+			case <-time.After(time.Second * 10):
 				r, err := gModem.Hangup()
 				if err != nil {
 					log.WithError(err).Error("Failed hanging up call")
