@@ -6,7 +6,7 @@ pi3:
   config:
     modem:
       baud: 9600
-      device: /dev/ttyUSB2
+      device: /dev/QWS.EC25.AT
       timeout: 1m
     sw_version: 0.0.18
     port: 8080
@@ -17,7 +17,7 @@ pi4:
   config:
     modem:
       baud: 9600
-      device: /dev/ttyUSB2
+      device: /dev/QWS.EC25.AT
       timeout: 1m
     sw_version: 0.0.18
     port: 8080

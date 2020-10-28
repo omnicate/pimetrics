@@ -42,6 +42,9 @@
                 border-radius: 16px;
                 align-self: flex-start;
             }
+            .message-wrap.self {
+                align-self: flex-end;
+            }
             .message.self {
                 background: #008fbb;
                 color: #fff;
@@ -112,10 +115,12 @@
                     <h3>Sms conversation</h3>
                     <div id="vue-app">
                         <div class="messages">
-                            <div v-for="message in messages" class="message" :class="{'self' : message.isSelf}">
-                                {%message.text%}
+                            <div v-for="message in messages" class="message-wrap" :class="{'self' : message.isSelf}">
+                                <div class="message" :class="{'self' : message.isSelf}">
+                                  {%message.text%}
+                                </div>
                                 <pre class="label label-default">{%message.number%}</pre>
-                            </div>
+                              </div>
                         </div>
                     </div>
                 </div>

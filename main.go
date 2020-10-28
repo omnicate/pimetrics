@@ -118,7 +118,8 @@ func init() {
 	renderData.Port = CurrentConfig.AppConfig.Port
 
 	var err error
-	gModem, err = modem.InitModem(&CurrentConfig.AppConfig.ModemConfig,
+	gModem, err = modem.InitModem(wsClients,
+		&CurrentConfig.AppConfig.ModemConfig,
 		[]gsm.Option{})
 	if err != nil {
 		log.WithError(err).Error("Failed initialising modem with")

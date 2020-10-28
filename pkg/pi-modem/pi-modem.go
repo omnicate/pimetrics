@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/warthog618/modem/at"
@@ -19,11 +20,18 @@ const (
 	MODEM_BREAK = BREAKLINE + NEWLINE
 )
 
+var (
+	wsClients map[*websocket.Conn]bool
+)
+
 type PiModem struct {
 	*gsm.GSM
 }
 
-func InitModem(cfg *ModemConfig, opts []gsm.Option) (*PiModem, error) {
+func InitModem(
+	clients map[*websocket.Conn]bool,
+	cfg *ModemConfig,
+	opts []gsm.Option) (*PiModem, error) {
 
 	log.WithFields(log.Fields{
 		"modem_config": cfg,
@@ -40,6 +48,8 @@ func InitModem(cfg *ModemConfig, opts []gsm.Option) (*PiModem, error) {
 	if err = modem.Init(); err != nil {
 		return nil, err
 	}
+
+	wsClients = clients
 
 	modem.ReceiveMode()
 	modem.HandleIncomingCall()
@@ -74,9 +84,20 @@ func (g *PiModem) ReceiveMode() {
 			if msg.Message == "OMG_MAGIC_STUFF_!!_one_eleven_!!!" {
 				_, _ = g.SendShortMessage(msg.Number, "NO_MAGIC_JUST_TURTLES")
 			}
+			for client := range wsClients {
+				err := client.WriteJSON(SMS{
+					Text:   msg.Message,
+					Number: msg.Number,
+				})
+				if err != nil {
+					log.WithError(err).Error("Failed sending sms message to web socket")
+					client.Close()
+					delete(wsClients, client)
+				}
+			}
 		},
 		func(err error) {
-			log.WithError(err).Error("Failed receiving sms")
+			log.WithError(err).Error("Failed reciving sms")
 		})
 }
 
