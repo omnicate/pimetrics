@@ -328,7 +328,7 @@ func signalQualityReadable(iQual int) string {
 	if iQual >= 15 && iQual <= 19 {
 		return "Good"
 	}
-	if iQual >= 20 && iQual <= 30 {
+	if iQual >= 20 && iQual <= 31 {
 		return "Excellent"
 	}
 	return "Unknown"

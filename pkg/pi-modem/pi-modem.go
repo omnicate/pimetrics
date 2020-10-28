@@ -43,6 +43,7 @@ func InitModem(cfg *ModemConfig, opts []gsm.Option) (*PiModem, error) {
 
 	modem.ReceiveMode()
 	modem.HandleIncomingCall()
+	modem.HandleNoCarrier()
 
 	return modem, nil
 }
@@ -58,7 +59,7 @@ func (g *PiModem) Call(number string, options ...at.CommandOption) (rsp []string
 }
 
 func (g *PiModem) Hangup() (rsp []string, err error) {
-	cmd := "H" + MODEM_BREAK
+	cmd := "H0" + MODEM_BREAK
 	r, err := g.Command(cmd, []at.CommandOption{}...)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed hanging up call")
@@ -91,7 +92,7 @@ func (g *PiModem) HandleIncomingCall() {
 		for {
 			select {
 			case <-time.After(time.Second * 5):
-				res, err := g.Command("H")
+				res, err := g.Command("H0")
 				if err != nil {
 					log.WithError(err).Error("Failed hangingup call")
 				}
@@ -99,6 +100,13 @@ func (g *PiModem) HandleIncomingCall() {
 				return
 			}
 		}
+	})
+}
+
+func (g *PiModem) HandleNoCarrier() {
+	g.AddIndication("NO CARRIER", func(info []string) {
+
+		log.WithField("result", info).Info("Got a no carrier")
 	})
 }
 
